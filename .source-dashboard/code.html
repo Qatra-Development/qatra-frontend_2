@@ -1,0 +1,137 @@
+<!DOCTYPE html><html dir="rtl" lang="ar" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Qatrah - Verification Success</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&amp;display=swap" rel="stylesheet"><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700&amp;display=swap" rel="stylesheet" class="">
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            'sans': ['"IBM Plex Sans Arabic"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#9B1B30',
+              'red-dark': '#811225',
+              blue: '#1A2A3A',
+              gray: '#6B7280',
+              'gray-light': '#9CA3AF',
+              'gray-lighter': '#F3F4F6',
+              bg: '#FDF7F7'
+            }
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styles">
+    body {
+      background: linear-gradient(135deg, #FDF7F7 0%, #F5E6E6 100%);
+      min-height: 100vh;
+    }
+    
+    .otp-input {
+      width: 48px;
+      height: 48px;
+      border: 1px solid #E5E7EB;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1A2A3A;
+      transition: border-color 0.2s;
+    }
+    
+    .otp-input:focus {
+      outline: none;
+      border-color: #9B1B30;
+      box-shadow: 0 0 0 1px #9B1B30;
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background-color: #E5E7EB;
+      margin: 0 12px;
+    }
+
+    .step-line.active {
+      background-color: #9B1B30;
+    }
+  </style>
+</head>
+<body class="font-sans antialiased text-brand-blue flex flex-col relative overflow-hidden"><div style="position: absolute; width: 1048px; height: 1028px; left: -208px; bottom: -205px; background: rgb(241, 222, 223); mix-blend-mode: multiply; filter: blur(60px); border-radius: 9999px; z-index: -10; pointer-events: none;" data-stitch-orig-opacity="0.5" class=""></div><div class="" style="position: absolute; width: 1048px; height: 1028px; right: -250px; top: -150px; background: rgb(255, 179, 173); mix-blend-mode: multiply; filter: blur(120px); border-radius: 9999px; z-index: -10; pointer-events: none;" data-stitch-orig-opacity="0.35"></div>
+<!-- BEGIN: MainHeader -->
+<header class="w-full py-6 px-8 flex justify-between items-center absolute top-0 left-0 right-0 z-10 bg-transparent">
+  <div class="flex items-center space-x-4 space-x-reverse"><div class="flex items-center"><svg fill="none" height="30" viewBox="0 0 24 30" width="24" xmlns="http://www.w3.org/2000/svg" class="ml-2" style="display: flex; flex-direction: row; justify-content: center; align-items: flex-end; padding: 0px 0px 20px; width: 40px; height: 72px; flex: 0 0 auto; order: 0;"><path d="M12 0C12 0 24 10.5 24 20C24 26.6274 18.6274 32 12 32C5.37258 32 0 26.6274 0 20C0 10.5 12 0 12 0Z" fill="#9B1B30" fill-opacity="0.1"></path><path d="M12 4C12 4 20 12.5 20 20C20 24.4183 16.4183 28 12 28C7.58172 28 4 24.4183 4 20C4 12.5 12 4 12 4Z" fill="white"></path><path d="M12 8C12 8 16 14.5 16 20C16 22.2091 14.2091 24 12 24C9.79086 24 8 22.2091 8 20C8 14.5 12 8 12 8Z" fill="#9B1B30"></path></svg><span class="text-brand-red font-bold text-sm" style="width: 49px; height: 28px; font-family: Tajawal, sans-serif; font-weight: 700; font-size: 20px; line-height: 28px; display: flex; align-items: center; text-align: right; background: linear-gradient(263.35deg, rgb(158, 27, 50) 61.55%, rgb(187, 95, 112) 96.08%) text; -webkit-text-fill-color: transparent; flex: 0 0 auto; order: 0;">قطرة</span></div><span class="text-brand-gray-light" style="width: 30px; height: 20.18px; font-family: Tajawal, sans-serif; font-weight: 700; font-size: 24px; line-height: 29px; display: flex; align-items: center; text-align: right; color: rgb(158, 27, 50); transform: matrix(-1, -0.01, -0.01, 1, 0, 0); flex: 0 0 auto; order: 1;">←</span><a class="text-brand-gray-light hover:text-brand-red transition-colors text-sm font-medium" href="#" style="font-family: Tajawal, sans-serif; font-weight: 700; font-size: 24px; line-height: 29px; color: rgb(83, 96, 107); display: flex; align-items: center; text-align: right; width: 299px; height: 29px; order: 2;">العودة للرئيسية</a></div>
+  <div class="flex items-center space-x-2 space-x-reverse">
+    <span class="text-brand-gray text-sm">لديك حساب بالفعل؟</span>
+    <a class="text-brand-red font-semibold text-sm hover:underline" href="#">تسجيل الدخول</a>
+  </div>
+</header>
+<!-- END: MainHeader -->
+<!-- BEGIN: Main Content Area -->
+<main class="flex-grow flex items-center justify-center min-h-screen px-4 pt-20">
+<div class="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+<!-- BEGIN: Hero Content (Left Side now) -->
+<div class="order-1 lg:order-1 pr-0 lg:pr-12 flex flex-col justify-center items-start">
+<span class="flex flex-row justify-end items-start p-0 flex-none mb-6" style="font-family: Tajawal, sans-serif; font-weight: 800; font-size: 12.5px; line-height: 15px; color: rgb(83, 96, 107); letter-spacing: 0.499px; display: flex; align-items: center; width: 90px; height: 15px; order: 0; flex-grow: 0;">انضم إلى قطرة</span>
+<h1 class="text-5xl lg:text-6xl font-bold leading-tight mb-6 text-right">
+<span class="text-brand-red">تبرعك</span> قد يمنح<br>
+          شخصًا فرصة<br>
+          جديدة للحياة.
+        </h1>
+<p class="text-brand-gray text-lg mb-10 max-w-md opacity-80 text-right" style="font-family: Tajawal, sans-serif; font-weight: 400; font-size: 15px; line-height: 28px; color: rgb(83, 96, 107); text-align: right; display: flex; align-items: center; width: 382px; height: 29px;">
+          سجل بياناتك لتصلك النداءات المتوافقة مع فصيلتك وموقعك.
+        </p>
+<ul class="space-y-4">
+<li class="flex items-center text-sm font-medium text-brand-gray" style="font-family: Tajawal, sans-serif; font-weight: 400; font-size: 13.6px; line-height: 16px; color: rgb(9, 17, 23); display: flex; align-items: center; text-align: right;">
+<svg class="w-5 h-5 text-brand-red ml-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            إشعارات فورية وذكية
+          </li>
+<li class="flex items-center text-sm font-medium text-brand-gray" style="font-family: Tajawal, sans-serif; font-weight: 400; font-size: 13.6px; line-height: 16px; color: rgb(9, 17, 23); display: flex; align-items: center; text-align: right;">
+<svg class="w-5 h-5 text-brand-red ml-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            بياناتك محمية وآمنة
+          </li>
+<li class="flex items-center text-sm font-medium text-brand-gray" style="font-family: Tajawal, sans-serif; font-weight: 400; font-size: 13.6px; line-height: 16px; color: rgb(9, 17, 23); display: flex; align-items: center; text-align: right;">
+<svg class="w-5 h-5 text-brand-red ml-3 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            متابعة واضحة لكل العمليات
+          </li>
+</ul>
+</div>
+<!-- END: Hero Content -->
+<!-- BEGIN: Verification Card -->
+
+<!-- END: Verification Card -->
+</div>
+</main>
+<!-- END: Main Content Area -->
+<script data-purpose="otp-input-logic">
+    // Simple logic to auto-focus next input for OTP
+    document.addEventListener('DOMContentLoaded', () => {
+      const inputs = document.querySelectorAll('.otp-input');
+      inputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length === 1 && index < inputs.length - 1) {
+            inputs[index + 1].focus();
+          }
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+            inputs[index - 1].focus();
+          }
+        });
+      });
+    });
+  </script>
+
+
+
+
+
+
+</body></html>
