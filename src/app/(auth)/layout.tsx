@@ -33,12 +33,12 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
       <Navbar />
 
       {/* Content grid */}
-      <div className="flex-grow flex items-center justify-center min-h-screen px-4 pt-24">
-        <div className="max-w-8xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-          <div className="pr-40">
-          <AuthSideBanner />
+      <div className="flex-grow flex items-center justify-center min-h-screen px-4 py-24 sm:px-6">
+        <div className="w-full max-w-[1440px] grid grid-cols-1 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-8 lg:gap-12 items-center relative z-10">
+          <div className="hidden lg:block min-w-0">
+            <AuthSideBanner />
           </div>
-          <section className="order-2 lg:order-2 pl-40">{children}</section>
+          <section className="w-full min-w-0">{children}</section>
         </div>
       </div>
     </main>
