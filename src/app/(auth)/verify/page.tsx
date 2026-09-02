@@ -14,11 +14,12 @@ export default function VerifyPage() {
 
       <OtpInputGroup />
 
-      <button
+      <Link
+        href="/logIn"
         className="w-full py-3 px-6 bg-brand-red hover:bg-brand-red-dark text-white font-semibold rounded-lg transition-colors mb-4"
       >
         تأكيد الرمز
-      </button>
+      </Link>
 
       <p className="text-center text-sm text-brand-gray">
         لم يصلك الرمز؟{" "}

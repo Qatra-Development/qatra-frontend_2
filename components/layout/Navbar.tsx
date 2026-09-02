@@ -3,14 +3,15 @@ import Image from "next/image";
 
 function QatraLogo() {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 ">
       <Image
-        src="/img/logo.jpg"
+        src="/img/logo.png"
         alt="شعار قطرة"
-        width={40}
-        height={52}
+        width={30}
+        height={45}
         className="shrink-0"
         priority
+        
       />
       <span
         className="font-bold text-xl"
@@ -51,9 +52,9 @@ export default function Navbar() {
 
       {/* Left: Login */}
       <div className="flex items-center gap-2">
-        <span className="text-brand-gray text-sm">لديك حساب بالفعل؟</span>
+        <span className="text-brand-gray text-sm m-5">لديك حساب بالفعل؟</span>
         <Link
-          href="/select-path"
+          href="/logIn"
           className="text-brand-red font-semibold text-sm hover:underline"
         >
           تسجيل الدخول

@@ -11,10 +11,10 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
           width: "1048px",
           height: "1028px",
           left: "-208px",
-          bottom: "-205px",
-          background: "rgb(241, 222, 223)",
+          bottom: "-400px",
+          background: "rgba(241, 222, 223, 0.5)",
           mixBlendMode: "multiply",
-          filter: "blur(60px)",
+          filter: "blur(40px)",
         }}
       />
       <div
@@ -23,10 +23,10 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
           width: "1048px",
           height: "1028px",
           right: "-250px",
-          top: "-150px",
-          background: "rgb(255, 220, 218)",
+          top: "-300px",
+          background: "rgba(255, 220, 218, 0.5)",
           mixBlendMode: "multiply",
-          filter: "blur(140px)",
+          filter: "blur(35px)",
         }}
       />
 
@@ -34,9 +34,11 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
 
       {/* Content grid */}
       <div className="flex-grow flex items-center justify-center min-h-screen px-4 pt-24">
-        <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+        <div className="max-w-8xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
+          <div className="pr-40">
           <AuthSideBanner />
-          <section className="order-2 lg:order-2">{children}</section>
+          </div>
+          <section className="order-2 lg:order-2 pl-40">{children}</section>
         </div>
       </div>
     </main>
