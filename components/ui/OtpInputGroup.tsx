@@ -19,7 +19,7 @@ export default function OtpInputGroup() {
   };
 
   return (
-    <div className="flex gap-3 justify-center my-6" dir="ltr">
+    <div className="flex gap-2 sm:gap-3.5 justify-center my-5 sm:my-6" dir="ltr">
       {[0, 1, 2, 3].map((index) => (
         <input
           key={index}
@@ -29,7 +29,7 @@ export default function OtpInputGroup() {
           aria-label={`رقم التحقق ${index + 1}`}
           onChange={(e) => handleChange(e, index)}
           onKeyDown={(e) => handleKeyDown(e, index)}
-          className="w-12 h-12 border border-gray-200 rounded-lg text-center text-xl font-semibold text-brand-blue
+          className="w-11 h-11 sm:w-12 sm:h-12 border border-gray-200 rounded-lg text-center text-xl font-semibold text-brand-blue
                      focus:outline-none focus:border-brand-red focus:ring-1 focus:ring-brand-red transition-colors"
         />
       ))}

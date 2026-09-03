@@ -8,18 +8,18 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 sm:p-12 w-full max-w-xl mx-auto" dir="rtl">
-      <div className="mb-8 text-right">
-        <h1 className="text-3xl sm:text-4xl font-bold text-brand-blue mb-3">تسجيل الدخول</h1>
-        <p className="text-brand-gray text-sm sm:text-base">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-xl mx-auto" dir="rtl">
+      <div className="mb-6 sm:mb-8 text-right">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-brand-blue mb-2 sm:mb-3">تسجيل الدخول</h1>
+        <p className="text-brand-gray text-xs sm:text-sm md:text-base">
           أدخل بياناتك للوصول إلى لوحة التحكم الخاصة بك
         </p>
       </div>
 
-      <form action="#" method="POST" className="space-y-6">
+      <form action="#" method="POST" className="space-y-4 sm:space-y-5">
         {/* Identifier Field */}
         <div>
-          <label htmlFor="identifier" className="block text-sm font-bold text-gray-700 mb-2 text-right">
+          <label htmlFor="identifier" className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 text-right">
             رقم الهاتف أو البريد الإلكتروني
           </label>
           <div className="relative">
@@ -28,17 +28,17 @@ export default function LoginPage() {
               name="identifier"
               type="text"
               placeholder=" "
-              className="block w-full pr-10 pl-4 py-3 border border-gray-200 rounded-xl focus:ring-brand-red focus:border-brand-red sm:text-sm text-right"
+              className="block w-full pr-10 pl-4 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-brand-red focus:border-brand-red text-sm text-right"
             />
-            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-              <Mail className="h-5 w-5 text-gray-400" />
+            <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+              <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
           </div>
         </div>
 
         {/* Password Field */}
         <div>
-          <label htmlFor="password" className="block text-sm font-bold text-gray-700 mb-2 text-right">
+          <label htmlFor="password" className="block text-xs sm:text-sm font-bold text-gray-700 mb-1.5 sm:mb-2 text-right">
             كلمة المرور
           </label>
           <div className="relative">
@@ -47,69 +47,73 @@ export default function LoginPage() {
               name="password"
               type={showPassword ? "text" : "password"}
               placeholder=" "
-              className="block w-full pr-10 pl-4 py-3 border border-gray-200 rounded-xl focus:ring-brand-red focus:border-brand-red sm:text-sm text-right"
+              className="block w-full pr-10 pl-10 py-2.5 sm:py-3 border border-gray-200 rounded-xl focus:ring-brand-red focus:border-brand-red text-sm text-right"
             />
+            <div className="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+              <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            </div>
             <button
               type="button"
               onClick={() => setShowPassword((prev) => !prev)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+              className="absolute inset-y-0 left-0 pl-3.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
             >
               {showPassword ? (
-                <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
               ) : (
-                <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                <Eye className="h-4 w-4 sm:h-5 sm:w-5" />
               )}
             </button>
           </div>
         </div>
 
         {/* Remember Me & Forgot Password */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center">
-            <label htmlFor="remember-me" className="mr-2 block text-sm text-gray-700 pl-2 cursor-pointer">
-              تذكرني
-            </label>
+        <div className="flex items-center justify-between gap-2 pt-1">
+          <div className="flex items-center gap-2">
             <input
               id="remember-me"
               name="remember-me"
               type="checkbox"
-              className="w-[13px] h-[13px] rounded-[2.5px] border-gray-300 text-[#9E1B32] focus:ring-[#9E1B32] accent-[#9E1B32] cursor-pointer"
+              className="w-4 h-4 rounded-md border-gray-300 text-brand-red focus:ring-brand-red accent-brand-red cursor-pointer"
             />
+            <label htmlFor="remember-me" className="text-xs sm:text-sm text-gray-700 cursor-pointer select-none">
+              تذكرني
+            </label>
           </div>
-          <div className="text-sm">
-            <Link href="/forgot-password" className="font-medium text-brand-red hover:text-brand-red-dark transition-colors">
+          <div className="text-xs sm:text-sm">
+            <Link href="/ForgotPassword" className="font-semibold text-brand-red hover:text-brand-red-dark transition-colors">
               نسيت كلمة المرور؟
             </Link>
           </div>
         </div>
 
         {/* Submit Button */}
-        <div className="pt-2">
+        <div className="pt-2 sm:pt-3">
           <button
             type="submit"
-            className="w-full flex justify-center items-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-base font-medium text-white bg-brand-red hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red transition-colors"
+            className="w-full flex justify-center items-center py-3 sm:py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm sm:text-base font-semibold text-white bg-brand-red hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red transition-all active:scale-[0.99] cursor-pointer"
           >
             <span>دخول إلى المنصة</span>
-            <ArrowLeft className="h-5 w-5 mr-2" />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
           </button>
         </div>
       </form>
 
       {/* Divider */}
-      <div className="mt-8 relative">
+      <div className="mt-6 sm:mt-8 relative">
         <div aria-hidden="true" className="absolute inset-0 flex items-center">
           <div className="w-full border-t border-gray-200" />
         </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">أو</span>
+        <div className="relative flex justify-center text-xs sm:text-sm">
+          <span className="px-3 bg-white text-gray-400 font-medium">أو</span>
         </div>
       </div>
 
       {/* Registration Link */}
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-600">
+      <div className="mt-5 sm:mt-6 text-center">
+        <p className="text-xs sm:text-sm text-gray-600">
           ليس لديك حساب؟{" "}
-          <Link href="/select-path" className="font-medium text-brand-red hover:text-brand-red-dark transition-colors">
+          <Link href="/select-path" className="font-semibold text-brand-red hover:text-brand-red-dark transition-colors">
             أنشئ حساباً جديداً
           </Link>
         </p>

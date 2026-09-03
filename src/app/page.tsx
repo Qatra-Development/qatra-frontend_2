@@ -32,8 +32,8 @@ export default function Home() {
 
       <Navbar />
 
-      <section className="flex-grow flex items-center justify-center min-h-screen px-8 pt-24">
-        <div className="max-w-6xl w-full flex items-center relative z-10">
+      <section className="flex-grow flex items-center justify-center min-h-screen px-4 sm:px-8 pt-20 sm:pt-24 pb-8">
+        <div className="max-w-6xl w-full flex items-center justify-center lg:justify-start relative z-10">
           <AuthSideBanner />
         </div>
       </section>
