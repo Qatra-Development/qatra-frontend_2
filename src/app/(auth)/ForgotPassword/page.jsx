@@ -4,15 +4,33 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
+import { forgotPasswordSchema } from "@/src/features/auth/schemas/login.schema";
+import { requestPasswordReset } from "@/src/features/auth/services/auth.service";
+import { getApiErrorMessage } from "@/src/lib/api/errors";
 
 export default function ForgotPasswordPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!email) return;
-        router.push(`/VerifyReset?email=${encodeURIComponent(email)}`);
+        const validation = forgotPasswordSchema.safeParse({ email });
+        if (!validation.success) {
+            toast.error(validation.error.issues[0]?.message ?? "يرجى إدخال بريد إلكتروني صحيح.");
+            return;
+        }
+        try {
+            setIsLoading(true);
+            const response = await requestPasswordReset(validation.data);
+            toast.success(response.message || "تم إرسال رمز استعادة كلمة المرور.");
+            router.push(`/VerifyReset?email=${encodeURIComponent(validation.data.email)}`);
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -23,7 +41,7 @@ export default function ForgotPasswordPage() {
             {/* Top Navigation Link */}
             <div className="flex items-center justify-start mb-6">
                 <Link
-                    href="/logIn"
+                    href="/login"
                     className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold text-brand-red hover:opacity-85 transition-opacity"
                 >
                     <span>مرحبًا بعودتك</span>
@@ -67,9 +85,10 @@ export default function ForgotPasswordPage() {
                     {/* Submit Button */}
                     <button
                         type="submit"
+                        disabled={isLoading}
                         className="w-full h-12 sm:h-13 bg-brand-red hover:bg-brand-red-dark active:scale-[0.99] text-white font-bold text-sm sm:text-base rounded-2xl transition-all duration-200 shadow-md shadow-brand-red/20 flex items-center justify-center cursor-pointer"
                     >
-                        إرسال رمز التحقق
+                        {isLoading ? "جاري الإرسال..." : "إرسال رمز التحقق"}
                     </button>
                 </form>
             </div>

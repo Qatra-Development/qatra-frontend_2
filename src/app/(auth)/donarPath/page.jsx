@@ -1,8 +1,52 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import StepIndicator from "@/components/ui/StepIndicator";
 import { User, CreditCard, Droplet, MapPin, Phone, Mail, Lock } from "lucide-react";
+import { toast } from "sonner";
+import { donorRegistrationSchema } from "@/src/features/auth/schemas/login.schema";
+import { registerDonor } from "@/src/features/auth/services/auth.service";
+import { getApiErrorMessage } from "@/src/lib/api/errors";
 
 export default function DonorRegisterPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    const payload = {
+      fullName: String(formData.get("fullName") ?? ""),
+      nationalId: String(formData.get("idNumber") ?? ""),
+      bloodType: String(formData.get("bloodType") ?? ""),
+      region: String(formData.get("city") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      password: String(formData.get("password") ?? ""),
+      passwordConfirmation: String(formData.get("confirmPassword") ?? ""),
+      termsAccepted: formData.get("terms") === "on",
+    };
+    const validation = donorRegistrationSchema.safeParse(payload);
+
+    if (!validation.success) {
+      toast.error(validation.error.issues[0]?.message ?? "يرجى التحقق من البيانات المدخلة.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await registerDonor(validation.data);
+      toast.success(response.message || "تم إنشاء الحساب وإرسال رمز التحقق.");
+      router.push(`/verify?email=${encodeURIComponent(validation.data.email)}&type=donor`);
+    } catch (error) {
+      toast.error(getApiErrorMessage(error));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-4xl mx-auto" dir="rtl">
       <StepIndicator current="personal-info" />
@@ -13,7 +57,7 @@ export default function DonorRegisterPage() {
         أدخل بياناتك الأساسية حتى نرسل لك تحديثات التبرع المناسبة.
       </p>
 
-      <form action="/verify" method="GET" dir="rtl">
+      <form onSubmit={handleSubmit} dir="rtl">
         {/* Full Name */}
         <div className="mb-4 sm:mb-6">
           <label htmlFor="fullName" className="block text-xs sm:text-sm font-bold text-gray-900 mb-1.5 sm:mb-2 text-right">
@@ -202,9 +246,10 @@ export default function DonorRegisterPage() {
         <div className="flex flex-col-reverse sm:flex-row-reverse items-stretch sm:items-center justify-between gap-3 pt-6 border-t border-gray-100">
           <button
             type="submit"
+            disabled={isLoading}
             className="px-8 py-3 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-brand-red hover:bg-brand-red-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-red transition-colors cursor-pointer"
           >
-            إنشاء حساب المتبرع
+            {isLoading ? "جاري إنشاء الحساب..." : "إنشاء حساب المتبرع"}
           </button>
           <Link
             href="/select-path"

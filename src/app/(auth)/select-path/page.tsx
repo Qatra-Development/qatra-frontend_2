@@ -83,7 +83,7 @@ export default function SelectPathPage() {
 
       <p className="text-center text-xs sm:text-sm text-brand-gray">
         لديك حساب بالفعل؟{" "}
-        <Link href="/logIn" className="text-brand-red font-semibold hover:underline">
+        <Link href="/login" className="text-brand-red font-semibold hover:underline">
           تسجيل الدخول
         </Link>
       </p>

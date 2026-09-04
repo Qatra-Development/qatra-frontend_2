@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AppToaster } from "@/components/shared/AppToaster";
 
 export const metadata: Metadata = { 
   title: "قطرة - منصة التبرع بالدم", 
@@ -13,5 +14,5 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl"><body className="antialiased">{children}</body></html>;
+  return <html lang="ar" dir="rtl" className="font-sans"><body className="antialiased">{children}<AppToaster /></body></html>;
 }

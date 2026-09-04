@@ -2,6 +2,10 @@
 
 import { useRef, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
+import { forgotPasswordSchema, verificationCodeSchema } from "@/src/features/auth/schemas/login.schema";
+import { requestPasswordReset } from "@/src/features/auth/services/auth.service";
+import { getApiErrorMessage } from "@/src/lib/api/errors";
 
 const OTP_LENGTH = 4;
 
@@ -12,6 +16,7 @@ function OtpVerifyContent() {
 
     const [values, setValues] = useState(Array(OTP_LENGTH).fill(""));
     const inputsRef = useRef([]);
+    const [isResending, setIsResending] = useState(false);
 
     const handleChange = (index, rawValue) => {
         const digit = rawValue.replace(/[^0-9]/g, "").slice(-1);
@@ -53,8 +58,29 @@ function OtpVerifyContent() {
     const handleSubmit = (e) => {
         e.preventDefault();
         const code = values.join("");
-        // When user submits verification code, redirect to PasswordReset
-        router.push("/PasswordReset");
+        const validation = verificationCodeSchema.safeParse({ email, code });
+        if (!validation.success) {
+            toast.error(validation.error.issues[0]?.message ?? "يرجى إدخال رمز صحيح.");
+            return;
+        }
+        router.push(`/PasswordReset?email=${encodeURIComponent(validation.data.email)}&code=${validation.data.code}`);
+    };
+
+    const handleResend = async () => {
+        const validation = forgotPasswordSchema.safeParse({ email });
+        if (!validation.success) {
+            toast.error("رابط استعادة كلمة المرور غير صالح.");
+            return;
+        }
+        try {
+            setIsResending(true);
+            const response = await requestPasswordReset(validation.data);
+            toast.success(response.message || "تم إرسال رمز جديد.");
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
+        } finally {
+            setIsResending(false);
+        }
     };
 
     return (
@@ -93,9 +119,11 @@ function OtpVerifyContent() {
 
                     <button
                         type="button"
+                        onClick={handleResend}
+                        disabled={isResending}
                         className="text-xs sm:text-[13px] font-semibold text-brand-red hover:underline transition-all duration-150 focus:outline-none cursor-pointer"
                     >
-                        إعادة إرسال الرمز
+                        {isResending ? "جاري الإرسال..." : "إعادة إرسال الرمز"}
                     </button>
                 </form>
             </div>

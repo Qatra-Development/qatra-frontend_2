@@ -56,7 +56,7 @@ export default function Navbar() {
           لديك حساب بالفعل؟
         </span>
         <Link
-          href="/logIn"
+          href="/login"
           className="text-brand-red font-semibold text-xs sm:text-sm hover:underline whitespace-nowrap"
         >
           تسجيل الدخول

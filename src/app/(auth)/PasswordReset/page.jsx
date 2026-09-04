@@ -3,16 +3,42 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
+import { resetPasswordSchema } from "@/src/features/auth/schemas/login.schema";
+import { resetPassword } from "@/src/features/auth/services/auth.service";
+import { getApiErrorMessage } from "@/src/lib/api/errors";
 
 export default function ResetPasswordPage() {
     const router = useRouter();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [password, setPassword] = useState("");
+    const [passwordConfirmation, setPasswordConfirmation] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Redirect to login upon successful reset
-        router.push("/logIn");
+        const params = new URLSearchParams(window.location.search);
+        const validation = resetPasswordSchema.safeParse({
+            email: params.get("email") ?? "",
+            code: params.get("code") ?? "",
+            password,
+            passwordConfirmation,
+        });
+        if (!validation.success) {
+            toast.error(validation.error.issues[0]?.message ?? "يرجى التحقق من البيانات المدخلة.");
+            return;
+        }
+        try {
+            setIsLoading(true);
+            const response = await resetPassword(validation.data);
+            toast.success(response.message || "تم تغيير كلمة المرور بنجاح.");
+            router.replace("/login");
+        } catch (error) {
+            toast.error(getApiErrorMessage(error));
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -50,6 +76,8 @@ export default function ResetPasswordPage() {
                             id="new-password"
                             name="new-password"
                             type={showPassword ? "text" : "password"}
+                            value={password}
+                            onChange={(event) => setPassword(event.target.value)}
                             placeholder="••••••••"
                             required
                             className={`w-full text-right bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:border-brand-red focus:ring-1 focus:ring-brand-red focus:outline-none transition-all placeholder:text-gray-400 ${showPassword ? "" : "tracking-[0.25em]"
@@ -76,6 +104,8 @@ export default function ResetPasswordPage() {
                             id="confirm-password"
                             name="confirm-password"
                             type={showConfirmPassword ? "text" : "password"}
+                            value={passwordConfirmation}
+                            onChange={(event) => setPasswordConfirmation(event.target.value)}
                             placeholder="••••••••"
                             required
                             className={`w-full text-right bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-700 focus:border-brand-red focus:ring-1 focus:ring-brand-red focus:outline-none transition-all placeholder:text-gray-400 ${showConfirmPassword ? "" : "tracking-[0.25em]"
@@ -88,9 +118,10 @@ export default function ResetPasswordPage() {
                 <div className="pt-3">
                     <button
                         type="submit"
+                        disabled={isLoading}
                         className="w-full py-3 px-4 bg-brand-red hover:bg-brand-red-dark active:scale-[0.99] text-white font-semibold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-brand-red focus:ring-offset-2"
                     >
-                        تغيير كلمة المرور
+                        {isLoading ? "جاري تغيير كلمة المرور..." : "تغيير كلمة المرور"}
                     </button>
                 </div>
             </form>
