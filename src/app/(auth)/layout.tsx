@@ -34,8 +34,8 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
 
       {/* Content grid */}
       <div className="flex-grow flex items-center justify-center min-h-screen px-3.5 sm:px-6 md:px-8 pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <div className="w-full max-w-[1440px] grid grid-cols-1 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-8 lg:gap-12 items-center relative z-10">
-          <div className="hidden lg:block min-w-0">
+        <div className="w-full max-w-[1440px] grid grid-cols-1 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-8 lg:gap-12 items-start relative z-10">
+          <div className="hidden lg:block min-w-0 pt-4 lg:pt-6">
             <AuthSideBanner />
           </div>
           <section className="w-full min-w-0 flex justify-center">{children}</section>

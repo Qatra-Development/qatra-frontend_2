@@ -50,7 +50,7 @@ export default function SelectPathPage() {
 
         {/* Medical entity option */}
         <Link
-          href="/personal-info"
+          href="/HospitalPath"
           dir="rtl"
           className="flex flex-col items-end h-full p-5 sm:p-6 border border-gray-100 rounded-2xl shadow-[0px_15px_45px_rgba(30,36,50,0.06)] hover:border-[#437778] hover:shadow-md transition-all duration-300 ease-out group text-right active:scale-[0.99]"
         >
