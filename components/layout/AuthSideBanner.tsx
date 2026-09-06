@@ -14,7 +14,7 @@ function CheckMark() {
 
 export default function AuthSideBanner() {
   return (
-    <div className="order-1 lg:order-1 lg:translate-x-[50px] pr-0 lg:pr-12 flex flex-col justify-center items-start">
+    <div className="order-1 lg:order-1 lg:translate-x-[50px] pr-0 lg:pr-12 flex flex-col justify-start items-start">
       {/* Eyebrow */}
       <p
         className="text-brand-gray mb-6 tracking-wide text-xs font-bold uppercase"
