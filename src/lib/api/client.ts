@@ -1,18 +1,9 @@
-import { ApiError, type ApiErrorCode } from "./errors";
+import { ApiError, errorCodeForStatus } from "./errors";
 
 type ErrorPayload = {
   message?: string;
   errors?: Record<string, string[]>;
 };
-
-function errorCodeForStatus(status: number): ApiErrorCode {
-  if (status === 400 || status === 422) return "VALIDATION";
-  if (status === 401) return "AUTHENTICATION";
-  if (status === 403) return "AUTHORIZATION";
-  if (status === 404) return "NOT_FOUND";
-  if (status >= 500) return "SERVER";
-  return "UNKNOWN";
-}
 
 async function readPayload(response: Response): Promise<unknown> {
   const contentType = response.headers.get("content-type") ?? "";

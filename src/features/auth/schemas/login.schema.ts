@@ -25,17 +25,24 @@ const passwordSchema = z.string().min(8, "كلمة المرور يجب أن تك
 
 export const donorRegistrationSchema = z
   .object({
-    fullName: z.string().trim().min(2, "يرجى إدخال الاسم الكامل."),
-    nationalId: z.string().trim().min(8, "يرجى إدخال رقم هوية صحيح."),
+    fullName: z
+      .string()
+      .trim()
+      .min(3, "الاسم الكامل يجب أن يكون 3 أحرف على الأقل.")
+      .max(100, "الاسم الكامل يجب ألا يتجاوز 100 حرف.")
+      .regex(new RegExp("^[\\p{L}\\p{M}\\s'’-]+$", "u"), "الاسم يجب أن يحتوي على حروف فقط، دون أرقام أو رموز."),
+    nationalId: z.string().trim().regex(/^[0-9]{9}$/, "رقم الهوية يجب أن يتكون من 9 أرقام."),
     bloodType: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], {
       message: "يرجى اختيار فصيلة الدم.",
     }),
     region: z.enum(["north-gaza", "gaza", "deir-al-balah", "khan-yunis", "rafah"], {
       message: "يرجى اختيار المحافظة.",
     }),
-    phone: z.string().trim().regex(/^05\d{8}$/, "يرجى إدخال رقم جوال فلسطيني صحيح."),
-    email: emailSchema,
-    password: passwordSchema,
+    phone: z.string().trim().regex(/^05[69][0-9]{7}$/, "رقم الجوال يجب أن يبدأ بـ 056 أو 059 ويتكون من 10 أرقام."),
+    email: emailSchema.max(150, "البريد الإلكتروني يجب ألا يتجاوز 150 حرفًا."),
+    password: passwordSchema
+      .regex(new RegExp("\\p{L}", "u"), "كلمة المرور يجب أن تحتوي على حرف واحد على الأقل.")
+      .regex(new RegExp("\\p{N}", "u"), "كلمة المرور يجب أن تحتوي على رقم واحد على الأقل."),
     passwordConfirmation: z.string(),
     termsAccepted: z.literal(true, { message: "يجب الموافقة على الشروط وسياسة الخصوصية." }),
   })

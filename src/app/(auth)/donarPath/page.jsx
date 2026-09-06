@@ -41,6 +41,7 @@ export default function DonorRegisterPage() {
       toast.success(response.message || "تم إنشاء الحساب وإرسال رمز التحقق.");
       router.push(`/verify?email=${encodeURIComponent(validation.data.email)}&type=donor`);
     } catch (error) {
+      console.log(error);
       toast.error(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);
@@ -69,6 +70,8 @@ export default function DonorRegisterPage() {
               name="fullName"
               type="text"
               required
+              minLength={3}
+              maxLength={100}
               placeholder="ادخل اسمك الكامل"
               className="w-full pr-10 pl-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-right focus:border-brand-red focus:ring-brand-red"
             />
@@ -88,7 +91,10 @@ export default function DonorRegisterPage() {
                 name="idNumber"
                 type="text"
                 required
-                placeholder="١٠ أرقام على الأقل"
+                inputMode="numeric"
+                minLength={9}
+                maxLength={9}
+                placeholder="9 أرقام"
                 className="w-full pr-10 pl-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-right focus:border-brand-red focus:ring-brand-red"
               />
               <CreditCard className="w-4 h-4 text-gray-400 absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none" />
@@ -158,7 +164,9 @@ export default function DonorRegisterPage() {
                 type="tel"
                 dir="ltr"
                 required
-                placeholder="000 000 0000"
+                minLength={10}
+                maxLength={10}
+                placeholder="0591234567"
                 className="w-full pr-10 pl-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-right focus:border-brand-red focus:ring-brand-red"
               />
               <Phone className="w-4 h-4 text-gray-400 absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none" />
@@ -177,6 +185,7 @@ export default function DonorRegisterPage() {
               name="email"
               type="email"
               required
+              maxLength={150}
               placeholder="أدخل بريدك الإلكتروني"
               className="w-full pr-10 pl-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-right focus:border-brand-red focus:ring-brand-red"
             />
@@ -196,11 +205,13 @@ export default function DonorRegisterPage() {
                 name="password"
                 type="password"
                 required
+                minLength={8}
                 placeholder="••••••••"
                 className="w-full pr-10 pl-4 py-2.5 border-2 border-gray-200 rounded-lg text-sm text-right focus:border-brand-red focus:ring-brand-red"
               />
               <Lock className="w-4 h-4 text-gray-400 absolute top-1/2 right-3 -translate-y-1/2 pointer-events-none" />
             </div>
+            <p className="mt-1 text-xs text-brand-gray">8 أحرف على الأقل، تشمل حروفًا وأرقامًا.</p>
           </div>
 
           <div>
