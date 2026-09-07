@@ -1,5 +1,6 @@
 import AuthSideBanner from "@/components/layout/AuthSideBanner";
 import Navbar from "@/components/layout/Navbar";
+import { InstitutionRegistrationProvider } from "@/src/features/auth/client/institution-registration-context";
 
 export default function AuthLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -38,7 +39,9 @@ export default function AuthLayout({ children }: Readonly<{ children: React.Reac
           <div className="hidden lg:block min-w-0 pt-4 lg:pt-6">
             <AuthSideBanner />
           </div>
-          <section className="w-full min-w-0 flex justify-center">{children}</section>
+          <section className="w-full min-w-0 flex justify-center">
+            <InstitutionRegistrationProvider>{children}</InstitutionRegistrationProvider>
+          </section>
         </div>
       </div>
     </main>

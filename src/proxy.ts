@@ -9,6 +9,8 @@ const AUTH_ROUTES = new Set([
   "/VerifyReset",
   "/select-path",
   "/donarPath",
+  "/HospitalPath",
+  "/HospitalDocuments",
   "/personal-info",
   "/verify",
 ]);
@@ -40,6 +42,8 @@ export const config = {
     "/VerifyReset",
     "/select-path",
     "/donarPath",
+    "/HospitalPath",
+    "/HospitalDocuments",
     "/personal-info",
     "/verify",
   ],

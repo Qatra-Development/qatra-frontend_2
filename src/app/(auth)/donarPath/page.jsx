@@ -41,7 +41,6 @@ export default function DonorRegisterPage() {
       toast.success(response.message || "تم إنشاء الحساب وإرسال رمز التحقق.");
       router.push(`/verify?email=${encodeURIComponent(validation.data.email)}&type=donor`);
     } catch (error) {
-      console.log(error);
       toast.error(getApiErrorMessage(error));
     } finally {
       setIsLoading(false);

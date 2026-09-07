@@ -17,17 +17,18 @@ export async function apiClient<TResponse>(
   options: Omit<RequestInit, "body"> & { body?: object } = {},
 ): Promise<TResponse> {
   const { body, headers, ...requestOptions } = options;
+  const isFormData = body instanceof FormData;
+  const requestHeaders = new Headers(headers);
+  if (!requestHeaders.has("Accept")) requestHeaders.set("Accept", "application/json");
+  if (isFormData) requestHeaders.delete("Content-Type");
+  else if (body && !requestHeaders.has("Content-Type")) requestHeaders.set("Content-Type", "application/json");
 
   let response: Response;
   try {
     response = await fetch(endpoint, {
       ...requestOptions,
-      headers: {
-        Accept: "application/json",
-        ...(body ? { "Content-Type": "application/json" } : {}),
-        ...headers,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+      headers: requestHeaders,
+      body: isFormData ? body : body ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new ApiError("تعذر الاتصال بالخادم. يرجى التحقق من الإنترنت.", "NETWORK");

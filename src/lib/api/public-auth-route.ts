@@ -2,10 +2,8 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 import type { z } from "zod";
-import { apiErrorResponse } from "./route-response";
+import { apiErrorResponse, publicAuthResponse } from "./route-response";
 import { backendRequest } from "./server-client";
-
-type PublicAuthPayload = { success?: boolean; message?: string };
 
 export async function forwardPublicAuth<TSchema extends z.ZodType>(
   request: Request,
@@ -28,20 +26,13 @@ export async function forwardPublicAuth<TSchema extends z.ZodType>(
       );
     }
 
-    const response = await backendRequest<PublicAuthPayload>(endpoint, {
+    const response = await backendRequest<unknown>(endpoint, {
       method: "POST",
       headers: { Accept: "application/json", "Content-Type": "application/json" },
       body: JSON.stringify(mapPayload(parsed.data)),
     });
 
-    if (response.success === false) {
-      return NextResponse.json(
-        { success: false, message: response.message ?? "تعذر إتمام الطلب." },
-        { status: 422 },
-      );
-    }
-
-    return NextResponse.json(response);
+    return publicAuthResponse(response);
   } catch (error) {
     return apiErrorResponse(error);
   }
