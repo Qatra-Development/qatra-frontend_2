@@ -57,4 +57,8 @@ export interface LoginResponse {
 export type PublicAuthResponse = {
   success: boolean;
   message: string;
+  data?: {
+    verification_email_sent?: boolean;
+    [key: string]: unknown;
+  };
 };

@@ -89,7 +89,12 @@ export function useInstitutionDocumentsForm() {
       const response = await registerInstitution(parsed.data);
       const email = parsed.data.email;
       draft.clearDraft();
-      toast.success(response.message || "تم إرسال طلب المؤسسة. يرجى التحقق من بريدك الإلكتروني.");
+      const message = response.message || "تم إرسال طلب المؤسسة. يرجى التحقق من بريدك الإلكتروني.";
+      if (response.data?.verification_email_sent === false) {
+        toast.warning(message);
+      } else {
+        toast.success(message);
+      }
       router.replace(`/verify?email=${encodeURIComponent(email)}&type=institution`);
     } catch (error) {
       if (error instanceof ApiError && error.fieldErrors) {
