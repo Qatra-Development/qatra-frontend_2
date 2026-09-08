@@ -129,8 +129,9 @@ export default function AccountVerificationForm({ email, accountType }) {
           {isInstitution ? "تأكيد بريد المؤسسة" : "تبقّت خطوة واحدة لتصبح جزءًا من قطرة"}
         </h1>
         <p className="text-xs sm:text-sm text-brand-gray max-w-md leading-relaxed mb-7 px-4">
-          أدخل رمز التحقق المكوّن من 4 أرقام والمرسل إلى بريدك الإلكتروني
-          {isInstitution && " لإرسال طلب المؤسسة إلى مراجعة الإدارة."}
+          {isInstitution
+            ? "أدخل رمز التحقق المكوّن من 4 أرقام والمرسل إلى بريد المؤسسة لإرسال الطلب إلى مراجعة الإدارة."
+            : "أدخل رمز التحقق 1111 لتفعيل حساب المتبرع."}
         </p>
 
         {/* OTP Form */}
