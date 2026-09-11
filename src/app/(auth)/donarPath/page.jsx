@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import StepIndicator from "@/components/ui/StepIndicator";
 import { User, CreditCard, Droplet, MapPin, Phone, Mail, Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +11,7 @@ import { registerDonor } from "@/src/features/auth/services/auth.service";
 import { getApiErrorMessage } from "@/src/lib/api/errors";
 
 export default function DonorRegisterPage() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (event) => {
@@ -41,7 +43,7 @@ export default function DonorRegisterPage() {
       } else {
         toast.success(response.message || "تم إنشاء الحساب وإرسال رمز التحقق.");
       }
-      window.location.assign(`/verify?email=${encodeURIComponent(validation.data.email)}&type=donor`);
+      router.push(`/verify?email=${encodeURIComponent(validation.data.email)}&type=donor`);
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
