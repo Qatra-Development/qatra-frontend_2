@@ -63,3 +63,11 @@ export const BFF_ENDPOINTS = {
   },
   backend: (path: string) => `/api/backend${path}`,
 } as const;
+
+export const backendProxyUrl = (backendPath: string) => {
+  const normalizedPath = backendPath.startsWith("/")
+    ? backendPath
+    : `/${backendPath}`;
+
+  return `/api/backend${normalizedPath}`;
+};

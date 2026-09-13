@@ -10,6 +10,7 @@ import {
   isAdminRouteActive,
 } from "../config/admin-navigation";
 import { endAuthenticatedSession } from "@/src/features/auth/client/session";
+import Image from "next/image";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -44,7 +45,13 @@ export default function AdminSidebar() {
       "
     >
       <Link href="/dashboard" className="mb-10 flex items-center gap-2 px-3">
-        <Droplet className="h-8 w-8 text-brand-red" strokeWidth={1.8} />
+        <Image
+          className="w-8 text-brand-red"
+          src={"/img/logo.png"}
+          width={600}
+          height={600}
+          alt="logo"
+        />
 
         <span className="text-xl font-bold text-brand-blue">قطرة</span>
       </Link>
