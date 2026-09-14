@@ -84,7 +84,7 @@ export default function InstitutionsTable({
                   </div>
 
                   <Link
-                    href={`/dashboard/institutions/${institution.id}`}
+                    href={`/dashboard/institutions/${institution.id}/review`}
                     className="
                         font-bold
                         text-brand-blue

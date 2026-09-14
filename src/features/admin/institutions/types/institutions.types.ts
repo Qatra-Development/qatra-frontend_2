@@ -17,14 +17,44 @@ export type ServiceScope =
   | "blood_bank_services_only"
   | "blood_request_and_blood_bank";
 
+export type InstitutionDocumentType =
+  | "practice_license"
+  | "commercial_registration"
+  | "representative_authorization"
+  | "quality_safety_certificate";
+
+export type InstitutionDocumentStatus = "pending" | "approved" | "rejected";
+
 export interface InstitutionDocument {
   id: number;
   institution_id: number;
-  document_type: string;
+  document_type: InstitutionDocumentType;
   file_path: string;
-  status: string;
+  status: InstitutionDocumentStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface InstitutionVerifierUser {
+  id?: number;
+  name?: string;
+  email?: string;
+  phone?: string;
+
+  avatar_url?: string | null;
+  image_url?: string | null;
+  profile_photo_url?: string | null;
+}
+
+export interface InstitutionVerifier {
+  id?: number;
+  name?: string;
+
+  avatar_url?: string | null;
+  image_url?: string | null;
+  profile_photo_url?: string | null;
+
+  user?: InstitutionVerifierUser | null;
 }
 
 export interface InstitutionRepresentativeUser {
@@ -69,8 +99,7 @@ export interface AdminInstitution {
 
   representative: InstitutionRepresentative;
   documents: InstitutionDocument[];
-
-  verifier: unknown | null;
+  verifier: InstitutionVerifier | null;
 }
 
 export interface LaravelPagination<T> {

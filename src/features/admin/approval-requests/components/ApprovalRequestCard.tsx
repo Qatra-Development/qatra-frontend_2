@@ -144,7 +144,7 @@ export default function ApprovalRequestCard({
         </span>
 
         <Link
-          href={`/dashboard/approval-requests/${institution.id}`}
+          href={`/dashboard/institutions/${institution.id}/review`}
           className="
             inline-flex
             h-10
