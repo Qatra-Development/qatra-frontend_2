@@ -62,11 +62,21 @@ export async function POST(request: Request) {
       },
     });
 
+    const accountType =
+      backendResponse.data.user?.account_type ||
+      (backendResponse.data.institution ? "health_institution" : "donor");
+
     response.cookies.set(
       AUTH_COOKIE_NAME,
       backendResponse.data.token,
       authCookieOptions(rememberMe),
     );
+
+    response.cookies.set("account_type", accountType, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
+    });
 
     return response;
   } catch (error) {

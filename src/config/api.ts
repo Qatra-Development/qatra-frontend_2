@@ -45,6 +45,10 @@ export const API_ENDPOINTS = {
     rejectInstitution: (institutionId: number | string) =>
       `/admin/institutions/${institutionId}/reject`,
   },
+  institution: {
+    status: "/institution/status",
+    resubmit: "/institution/resubmit",
+  },
 } as const;
 
 export const BFF_ENDPOINTS = {

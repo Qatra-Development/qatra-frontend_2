@@ -9,7 +9,7 @@ const AUTH_ROUTES = new Set([
   "/VerifyReset",
   "/select-path",
   "/donarPath",
-  "/HospitalPath",
+  "/HospitalRegister",
   "/HospitalDocuments",
   "/personal-info",
   "/verify",
@@ -18,14 +18,26 @@ const AUTH_ROUTES = new Set([
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isAuthenticated = request.cookies.has(AUTH_COOKIE_NAME);
+  const accountType = request.cookies.get("account_type")?.value;
 
-  const isDashboardRoute = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  const isProtectedRoute =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/HospitalPath" ||
+    pathname.startsWith("/HospitalPath/");
 
-  if (isDashboardRoute && !isAuthenticated) {
+  if (isProtectedRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
   if (AUTH_ROUTES.has(pathname) && isAuthenticated) {
+    if (
+      accountType === "health_institution" ||
+      accountType === "institution" ||
+      accountType === "hospital"
+    ) {
+      return NextResponse.redirect(new URL("/HospitalPath", request.url));
+    }
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -42,6 +54,7 @@ export const config = {
     "/VerifyReset",
     "/select-path",
     "/donarPath",
+    "/HospitalRegister",
     "/HospitalPath",
     "/HospitalDocuments",
     "/personal-info",

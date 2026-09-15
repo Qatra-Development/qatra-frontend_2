@@ -1,5 +1,5 @@
 import InstitutionDetailsForm from "@/components/ui/auth/institution/InstitutionDetailsForm";
 
-export default function InstitutionRegisterPage() {
+export default function HospitalRegisterPage() {
   return <InstitutionDetailsForm />;
 }
