@@ -19,6 +19,10 @@ export const API_ENDPOINTS = {
   donations: {
     create: "/donations",
   },
+  institution: {
+    status: "/institution/status",
+    resubmit: "/institution/resubmit",
+  },
 } as const;
 
 export const BFF_ENDPOINTS = {
