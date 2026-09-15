@@ -17,7 +17,7 @@ export default function InstitutionDocumentsForm() {
         <InstitutionSteps current={2} />
         <h1 className="text-xl font-bold text-gray-900 mb-3">أكمل بيانات المؤسسة أولًا</h1>
         <p className="text-sm text-brand-gray mb-6">لإرسال الوثائق نحتاج بيانات المؤسسة من الخطوة السابقة. إذا أعدت تحميل الصفحة، يرجى إدخالها مجددًا.</p>
-        <Link href="/HospitalPath" className="inline-block rounded-xl bg-brand-red text-white px-6 py-3 text-sm">إدخال بيانات المؤسسة</Link>
+        <Link href="/HospitalRegister" className="inline-block rounded-xl bg-brand-red text-white px-6 py-3 text-sm">إدخال بيانات المؤسسة</Link>
       </section>
     );
   }
@@ -47,7 +47,7 @@ export default function InstitutionDocumentsForm() {
               ))}
             </div>
           </section>
-          {hasDetailsErrors && <p role="alert" className="bg-rose-50 rounded-xl p-3 text-xs text-brand-red mb-4">بعض بيانات المؤسسة تحتاج إلى تصحيح. <Link href="/HospitalPath" className="font-bold underline">مراجعة بيانات المؤسسة</Link></p>}
+          {hasDetailsErrors && <p role="alert" className="bg-rose-50 rounded-xl p-3 text-xs text-brand-red mb-4">بعض بيانات المؤسسة تحتاج إلى تصحيح. <Link href="/HospitalRegister" className="font-bold underline">مراجعة بيانات المؤسسة</Link></p>}
           <div className="mb-6">
             <label className="flex items-start gap-2 text-xs text-gray-600 cursor-pointer">
               <input name="termsAccepted" type="checkbox" checked={form.termsAccepted} onChange={(event) => form.setTermsAccepted(event.target.checked)} aria-invalid={Boolean(form.errors.termsAccepted)} aria-describedby={form.errors.termsAccepted ? "institution-terms-error" : undefined} className="w-4 h-4 shrink-0 accent-brand-red" />
@@ -60,7 +60,7 @@ export default function InstitutionDocumentsForm() {
             <div><h3 className="text-xs font-bold text-gray-800 mb-1">ماذا يحدث بعد الإرسال؟</h3><p className="text-xs text-gray-500 leading-relaxed">سنرسل رمز تحقق إلى بريد المؤسسة. بعد تأكيد البريد ينتقل الطلب والوثائق إلى مراجعة الإدارة قبل الاعتماد.</p></div>
           </aside>
           <footer className="flex flex-wrap items-center justify-between gap-3">
-            {form.isLoading ? <span className="text-xs text-gray-400">العودة للبيانات</span> : <Link href="/HospitalPath" className="border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold px-6 py-2.5 rounded-xl">العودة للبيانات</Link>}
+            {form.isLoading ? <span className="text-xs text-gray-400">العودة للبيانات</span> : <Link href="/HospitalRegister" className="border border-gray-200 hover:bg-gray-50 text-gray-700 text-xs sm:text-sm font-semibold px-6 py-2.5 rounded-xl">العودة للبيانات</Link>}
             <button type="submit" className="bg-brand-red hover:bg-brand-red-dark disabled:opacity-60 text-white text-xs sm:text-sm font-bold px-8 py-2.5 rounded-xl shadow-sm">{form.isLoading ? "جاري رفع المستندات وإرسال الطلب..." : "إرسال طلب التسجيل"}</button>
           </footer>
         </fieldset>
