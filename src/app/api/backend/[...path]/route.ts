@@ -14,7 +14,9 @@ type RouteContext = {
 };
 
 const BACKEND_BASE_URL =
-  process.env.API_BASE_URL ?? process.env.NEXT_PUBLIC_API_URL;
+  process.env.API_URL ??
+  process.env.API_BASE_URL ??
+  process.env.NEXT_PUBLIC_API_URL;
 
 /**
  * Proxy binary files such as PDF / JPG / PNG without trying
