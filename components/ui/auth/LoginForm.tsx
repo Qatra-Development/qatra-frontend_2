@@ -56,7 +56,28 @@ export default function LoginForm() {
 
       saveAuthenticatedUser(response.data);
       toast.success(response.message || "تم تسجيل الدخول بنجاح.");
-      router.replace("/");
+
+      const user = response.data?.user;
+      const institution = response.data?.institution;
+      const accountType =
+        user?.account_type || (user as { role?: string })?.role;
+
+      if (accountType === "health_authority_admin") {
+        window.location.assign("/dashboard");
+        return;
+      }
+
+      const isInstitution =
+        accountType === "health_institution" ||
+        accountType === "institution" ||
+        accountType === "hospital" ||
+        Boolean(institution);
+
+      if (isInstitution) {
+        window.location.assign("/HospitalPath");
+      } else {
+        window.location.assign("/");
+      }
     } catch (error) {
       toast.error(getApiErrorMessage(error));
     } finally {
