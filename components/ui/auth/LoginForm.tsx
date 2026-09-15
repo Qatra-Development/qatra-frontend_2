@@ -62,6 +62,11 @@ export default function LoginForm() {
       const accountType =
         user?.account_type || (user as { role?: string })?.role;
 
+      if (accountType === "health_authority_admin") {
+        window.location.assign("/dashboard");
+        return;
+      }
+
       const isInstitution =
         accountType === "health_institution" ||
         accountType === "institution" ||

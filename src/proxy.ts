@@ -31,6 +31,10 @@ export function proxy(request: NextRequest) {
   }
 
   if (AUTH_ROUTES.has(pathname) && isAuthenticated) {
+    if (accountType === "health_authority_admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+
     if (
       accountType === "health_institution" ||
       accountType === "institution" ||
