@@ -170,11 +170,13 @@ async function forward(
      */
     const method = request.method;
 
+    const contentType = request.headers.get("content-type");
+
     const body = ["GET", "HEAD"].includes(method)
       ? undefined
-      : await request.text();
-
-    const contentType = request.headers.get("content-type");
+      : contentType?.includes("multipart/form-data")
+        ? await request.arrayBuffer()
+        : await request.text();
 
     const query = new URL(request.url).search;
 
