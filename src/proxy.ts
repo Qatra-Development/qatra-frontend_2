@@ -17,19 +17,36 @@ const AUTH_ROUTES = new Set([
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
   const isAuthenticated = request.cookies.has(AUTH_COOKIE_NAME);
   const accountType = request.cookies.get("account_type")?.value;
 
+  /*
+   * Protected routes
+   *
+   * - /dashboard        -> Health Authority Admin
+   * - /HospitalPath     -> Existing institution flow
+   * - /institution      -> New institution dashboard
+   */
   const isProtectedRoute =
     pathname === "/dashboard" ||
     pathname.startsWith("/dashboard/") ||
     pathname === "/HospitalPath" ||
-    pathname.startsWith("/HospitalPath/");
+    pathname.startsWith("/HospitalPath/") ||
+    pathname === "/institution" ||
+    pathname.startsWith("/institution/");
 
+  /*
+   * Any protected page requires authentication.
+   */
   if (isProtectedRoute && !isAuthenticated) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  /*
+   * Prevent authenticated users from returning
+   * to authentication / registration pages.
+   */
   if (AUTH_ROUTES.has(pathname) && isAuthenticated) {
     if (accountType === "health_authority_admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
@@ -40,8 +57,11 @@ export function proxy(request: NextRequest) {
       accountType === "institution" ||
       accountType === "hospital"
     ) {
-      return NextResponse.redirect(new URL("/HospitalPath", request.url));
+      return NextResponse.redirect(
+        new URL("/institution/dashboard", request.url),
+      );
     }
+
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -51,6 +71,8 @@ export function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/dashboard/:path*",
+    "/institution/:path*",
+
     "/login",
     "/logIn",
     "/ForgotPassword",
@@ -59,7 +81,7 @@ export const config = {
     "/select-path",
     "/donarPath",
     "/HospitalRegister",
-    "/HospitalPath",
+    "/HospitalPath/:path*",
     "/HospitalDocuments",
     "/personal-info",
     "/verify",
