@@ -14,6 +14,9 @@ interface Props {
 }
 
 export default function RequestStatusOverview({ summary, latestDraft }: Props) {
+  const totalStatusCount =
+    summary.total_requests + summary.draft_count;
+
   return (
     <div
       className="
@@ -22,65 +25,109 @@ export default function RequestStatusOverview({ summary, latestDraft }: Props) {
         sm:p-6
       "
     >
-      <h2
-        className="
-          text-lg
-          font-bold
-          text-[var(--admin-text-primary)]
-        "
-      >
-        حالة طلبات المؤسسة
-      </h2>
+      <div className="flex items-center justify-between gap-4">
+        <h2
+          className="
+            text-lg
+            font-bold
+            text-[var(--admin-text-primary)]
+          "
+        >
+          حالة طلبات المؤسسة
+        </h2>
+
+        <Link
+          href="/institution/requests"
+          className="
+            shrink-0
+            text-xs
+            font-semibold
+            text-[var(--admin-danger)]
+            transition
+            hover:opacity-80
+          "
+        >
+          ← عرض الكل
+        </Link>
+      </div>
 
       <div className="mt-6 space-y-5">
         {REQUEST_STATUS_OVERVIEW.map((item) => {
           const value = summary.status_counts?.[item.status] ?? 0;
 
+          const progress =
+            totalStatusCount > 0 ? (value / totalStatusCount) * 100 : 0;
+
           return (
             <div
               key={item.status}
               className="
-                  grid
-                  grid-cols-[110px_minmax(70px,1fr)_32px]
+                  flex
                   items-center
                   gap-4
                 "
             >
-              <span
-                className="
-                    text-xs
-                    text-[var(--admin-text-secondary)]
-                  "
-              >
-                {item.label}
-              </span>
-
               <div
                 className="
                     flex
-                    justify-end
+                    w-[118px]
+                    shrink-0
+                    items-center
+                    gap-2
+                "
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-2.5 w-2.5 shrink-0 rounded-full"
+                  style={{ backgroundColor: item.color }}
+                />
+
+                <span
+                  className="
+                    text-xs
+                    text-[var(--admin-text-secondary)]
+                  "
+                >
+                  {item.label}
+                </span>
+              </div>
+
+              <div
+                aria-label={`${item.label}: ${value}`}
+                className="
+                    h-1.5
+                    min-w-0
+                    flex-1
+                    overflow-hidden
+                    rounded-full
+                    bg-[#f0f1f2]
                   "
               >
                 <span
                   className={`
-                      h-[3px]
+                      block
+                      h-full
                       rounded-full
-                      ${item.className}
                     `}
                   style={{
-                    width: `${Math.max(20, Math.min(value * 7, 100))}%`,
+                    width: `${progress}%`,
+                    backgroundColor: item.color,
                   }}
                 />
               </div>
 
-              <strong
+              <bdi
+                dir="ltr"
                 className="
+                    w-8
+                    shrink-0
+                    text-left
                     text-xs
                     text-[var(--admin-text-primary)]
                   "
               >
                 {value}
-              </strong>
+              </bdi>
             </div>
           );
         })}

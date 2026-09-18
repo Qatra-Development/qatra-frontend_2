@@ -13,6 +13,7 @@ import {
   isInstitutionRouteActive,
 } from "../config/institution-navigation";
 import { logout } from "@/src/features/auth/services/auth.service";
+import Image from "next/image";
 
 export default function InstitutionSidebar() {
   const pathname = usePathname();
@@ -61,12 +62,19 @@ export default function InstitutionSidebar() {
           gap-2 px-3
         "
       >
-        <Droplet
+        {/* <Droplet
           className="
             h-8 w-8
             text-[var(--admin-danger)]
           "
           strokeWidth={1.8}
+        /> */}
+        <Image
+          src={"/img/logo.png"}
+          width={800}
+          height={800}
+          alt="qatra-logo"
+          className="w-8"
         />
 
         <span

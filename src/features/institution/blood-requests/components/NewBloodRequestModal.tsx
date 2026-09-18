@@ -7,9 +7,10 @@ import {
   PRIORITY_OPTIONS,
 } from "../config/blood-request.config";
 
-import { useCreateBloodRequest } from "../hooks/useCreateBloodRequest";
+import type { BloodRequestPriority } from "../types/blood-request.types";
 
-import SupplierSelector from "./SupplierSelector";
+import { useCreateBloodRequest } from "../hooks/useCreateBloodRequest";
+import { SupplierSelector } from "./SupplierSelector";
 
 interface Props {
   open: boolean;
@@ -158,40 +159,30 @@ export default function NewBloodRequestModal({
                 gap-2
               "
             >
-              {BLOOD_TYPE_OPTIONS.map((bloodType) => {
-                const selected = form.blood_type === bloodType;
+              {BLOOD_TYPE_OPTIONS.map((option) => {
+                const selected = form.blood_type === option.value;
 
                 return (
                   <button
-                    key={bloodType}
+                    key={option.value}
                     type="button"
-                    onClick={() => updateField("blood_type", bloodType)}
+                    onClick={() => updateField("blood_type", option.value)}
                     className={`
-                        h-10
-                        rounded-lg
-                        border
-                        text-xs
-                        font-semibold
-                        transition
-
-                        ${
-                          selected
-                            ? `
-                              border-[var(--admin-danger)]
-                              bg-[var(--admin-danger)]
-                              text-white
-                              shadow-sm
-                            `
-                            : `
-                              border-[var(--admin-border)]
-                              bg-white
-                              text-[var(--admin-text-secondary)]
-                              hover:border-[#d5b0b8]
-                            `
-                        }
-                      `}
+        rounded-lg
+        border
+        px-3
+        py-2
+        text-sm
+        font-medium
+        transition
+        ${
+          selected
+            ? "border-[var(--institution-chart-primary)] bg-[var(--institution-chart-primary)] text-white"
+            : "border-[var(--admin-border)] bg-white text-[var(--admin-text-primary)]"
+        }
+      `}
                   >
-                    <bdi dir="ltr">{bloodType}</bdi>
+                    {option.label}
                   </button>
                 );
               })}
@@ -209,7 +200,10 @@ export default function NewBloodRequestModal({
               <select
                 value={form.priority}
                 onChange={(event) =>
-                  updateField("priority", event.target.value as any)
+                  updateField(
+                    "priority",
+                    event.target.value as BloodRequestPriority | "",
+                  )
                 }
                 className="
                   institution-control

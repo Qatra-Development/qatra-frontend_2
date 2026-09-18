@@ -129,12 +129,12 @@ export default function InstitutionDashboard() {
           className="
             grid
             gap-5
-            xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.5fr)]
+            xl:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]
           "
         >
-          <BloodTypeChart summary={summary} />
-
           <RequestStatusOverview summary={summary} latestDraft={latestDraft} />
+
+          <BloodTypeChart summary={summary} />
         </section>
 
         <RecentRequestsTable requests={latestRequests} />

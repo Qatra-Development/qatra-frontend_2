@@ -16,14 +16,35 @@ const DISPLAY_ORDER: BloodType[] = [
   "A+",
 ];
 
+const MAX_BAR_HEIGHT = 170;
+const MIN_BAR_HEIGHT = 14;
+const EMPTY_BAR_HEIGHT = 3;
+
 interface Props {
   summary: BloodRequestSummary;
 }
 
 export default function BloodTypeChart({ summary }: Props) {
-  const values = normalizeBloodTypeUnits(summary.units_by_blood_type);
+  const normalizedValues = normalizeBloodTypeUnits(summary.units_by_blood_type);
 
-  const max = Math.max(...Object.values(values), 1);
+  const values = Object.fromEntries(
+    normalizedValues.map(({ blood_type, units }) => [blood_type, units]),
+  ) as Record<BloodType, number>;
+
+  const maxUnits = Math.max(
+    1,
+    ...DISPLAY_ORDER.map((bloodType) => values[bloodType] ?? 0),
+  );
+
+  const getBarHeight = (units: number) => {
+    if (!Number.isFinite(units) || units <= 0) {
+      return EMPTY_BAR_HEIGHT;
+    }
+
+    const height = Math.round((units / maxUnits) * MAX_BAR_HEIGHT);
+
+    return Math.max(MIN_BAR_HEIGHT, Math.min(height, MAX_BAR_HEIGHT));
+  };
 
   return (
     <div
@@ -88,10 +109,9 @@ export default function BloodTypeChart({ summary }: Props) {
         "
       >
         {DISPLAY_ORDER.map((bloodType, index) => {
-          const value = values[bloodType];
+          const value = values[bloodType] ?? 0;
 
-          const height =
-            value === 0 ? 3 : Math.max(14, Math.round((value / max) * 170));
+          const height = getBarHeight(value);
 
           const strong = index % 2 === 1;
 
@@ -128,7 +148,7 @@ export default function BloodTypeChart({ summary }: Props) {
                     }
                   `}
                 style={{
-                  height,
+                  height: `${height}px`,
                 }}
               />
 

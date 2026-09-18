@@ -96,7 +96,7 @@ export default function InstitutionStatCard({
         className={`
           absolute
           -bottom-10
-          -left-10
+          -right-10
           h-28 w-28
           rounded-full
           ${style.decoration}

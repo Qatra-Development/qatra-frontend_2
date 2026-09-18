@@ -58,13 +58,6 @@ export function useCreateBloodRequest(onSuccess: () => void) {
 
   useEffect(() => {
     if (!canSearchSuppliers) {
-      setSuppliers([]);
-
-      setForm((current) => ({
-        ...current,
-        recipient_ids: [],
-      }));
-
       return;
     }
 
@@ -123,6 +116,9 @@ export function useCreateBloodRequest(onSuccess: () => void) {
     setForm((current) => ({
       ...current,
       [key]: value,
+      ...((key === "blood_type" || key === "units_required") && {
+        recipient_ids: [],
+      }),
     }));
 
     setErrors((current) => {

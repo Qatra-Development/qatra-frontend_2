@@ -23,25 +23,46 @@ export type BloodRequestStatus =
   | "rejected"
   | "cancelled";
 
+export type BloodRequestStatusFilter = BloodRequestStatus | "processing";
+
+export type BloodRequestSort = "newest" | "oldest" | "priority" | "needed_at";
+
+export type BloodRequestDateField = "created_at" | "needed_at";
+
+export type BloodRequestDatePreset = "today" | "last7" | "last30" | "custom";
+
+/*
+|--------------------------------------------------------------------------
+| API
+|--------------------------------------------------------------------------
+*/
+
 export interface ApiResponse<T> {
   success: boolean;
   message?: string;
   data: T;
+  errors?: Record<string, string[]>;
 }
 
-export interface LaravelPagination<T> {
+export interface PaginationMeta {
   current_page: number;
-  data: T[];
   last_page: number;
   per_page: number;
   total: number;
-
-  from?: number | null;
-  to?: number | null;
-
-  next_page_url?: string | null;
-  prev_page_url?: string | null;
 }
+
+export interface PaginatedApiResponse<
+  T,
+  TMeta extends PaginationMeta = PaginationMeta,
+> extends ApiResponse<T[]> {
+  meta: TMeta;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Coverage
+|--------------------------------------------------------------------------
+*/
 
 export interface BloodRequestCoverage {
   provided: number;
@@ -49,13 +70,22 @@ export interface BloodRequestCoverage {
   label: string;
 }
 
+/*
+|--------------------------------------------------------------------------
+| Request
+|--------------------------------------------------------------------------
+*/
+
 export interface BloodRequestListItem {
   id: number;
   request_number: string;
 
   blood_type: BloodType;
+
   units_required: number;
   units_provided: number;
+
+  coverage: BloodRequestCoverage;
 
   priority: BloodRequestPriority;
   priority_label: string;
@@ -69,57 +99,83 @@ export interface BloodRequestListItem {
   status: BloodRequestStatus;
   status_label: string;
 
-  coverage: BloodRequestCoverage;
-
   version: number;
+
+  assigned_blood_bank_id: number | null;
 
   created_at: string;
   updated_at: string;
-
-  assigned_blood_bank_id?: number | null;
-}
-
-export interface BloodRequestDetails extends BloodRequestListItem {
-  recipient_ids?: number[];
-
-  recipients?: BloodRequestRecipient[];
-
-  available_actions?: {
-    edit: boolean;
-    submit: boolean;
-    cancel: boolean;
-  };
-
-  status_history?: BloodRequestHistory[];
-
-  cancellation_reason?: string | null;
-  rejection_reason?: string | null;
 }
 
 export interface BloodRequestRecipient {
-  id?: number;
-  institution_id?: number;
+  blood_bank_id: number;
 
-  institution_name?: string;
+  institution_name: string;
+  governorate: string;
 
-  status?: string;
+  status: string;
 
-  created_at?: string;
-  updated_at?: string;
+  sent_at: string | null;
+  responded_at: string | null;
+
+  rejection_reason: string | null;
 }
 
 export interface BloodRequestHistory {
-  from_status: string | null;
-  to_status: string;
+  from_status: BloodRequestStatus | null;
+  to_status: BloodRequestStatus;
 
   status_label: string;
 
-  changed_by?: string | null;
+  changed_by: number | null;
 
-  note?: string | null;
+  note: string | null;
 
   created_at: string;
 }
+
+export interface BloodRequestAvailableActions {
+  edit: boolean;
+  submit: boolean;
+  cancel: boolean;
+}
+
+export interface BloodRequestDetails extends BloodRequestListItem {
+  recipient_ids: number[];
+
+  recipients: BloodRequestRecipient[];
+
+  available_actions: BloodRequestAvailableActions;
+
+  accepted_at: string | null;
+
+  cancellation_reason: string | null;
+  cancelled_at: string | null;
+
+  rejection_reason: string | null;
+  rejected_at: string | null;
+
+  submitted_at: string | null;
+
+  completed_at: string | null;
+
+  delivered_by: number | null;
+  delivery_notes: string | null;
+
+  status_history: BloodRequestHistory[];
+}
+
+export interface BloodRequestMutationResult {
+  request: BloodRequestDetails;
+
+  message?: string;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Suppliers
+|--------------------------------------------------------------------------
+*/
 
 export interface BloodSupplier {
   id: number;
@@ -136,21 +192,27 @@ export interface BloodSupplier {
   same_governorate: boolean;
 }
 
-export interface SupplierPagination {
-  current_page?: number;
-  last_page?: number;
-  per_page?: number;
-  total?: number;
-
-  proximity_basis?: string;
-  blood_type_match?: string;
-  checked_at?: string;
+export interface SupplierPagination extends PaginationMeta {
+  proximity_basis: string;
+  blood_type_match: string;
+  checked_at: string;
 }
+
+export type SupplierApiResponse = PaginatedApiResponse<
+  BloodSupplier,
+  SupplierPagination
+>;
 
 export interface SupplierResult {
   items: BloodSupplier[];
-  meta?: SupplierPagination;
+  meta: SupplierPagination;
 }
+
+/*
+|--------------------------------------------------------------------------
+| Dashboard
+|--------------------------------------------------------------------------
+*/
 
 export interface BloodRequestSummary {
   total_requests: number;
@@ -166,14 +228,7 @@ export interface BloodRequestSummary {
 
   status_counts: Record<BloodRequestStatus, number>;
 
-  units_by_blood_type:
-    | Partial<Record<BloodType, number>>
-    | Array<{
-        blood_type: BloodType;
-        units?: number;
-        units_required?: number;
-        total?: number;
-      }>;
+  units_by_blood_type: Record<BloodType, number>;
 
   chart_period_days: number;
 }
@@ -185,6 +240,62 @@ export interface InstitutionDashboardData {
 
   latestDraft: BloodRequestDetails | null;
 }
+
+/*
+|--------------------------------------------------------------------------
+| List filters - API
+|--------------------------------------------------------------------------
+*/
+
+export interface BloodRequestListFilters {
+  search?: string;
+
+  blood_type?: BloodType;
+
+  priority?: BloodRequestPriority;
+
+  status?: BloodRequestStatusFilter;
+
+  date_from?: string;
+  date_to?: string;
+
+  date_field?: BloodRequestDateField;
+
+  sort?: BloodRequestSort;
+
+  page?: number;
+  per_page?: number;
+}
+
+/*
+|--------------------------------------------------------------------------
+| UI filters
+|--------------------------------------------------------------------------
+*/
+
+export interface BloodRequestUiFilters {
+  status?: BloodRequestStatusFilter;
+
+  blood_type?: BloodType;
+
+  priority?: BloodRequestPriority;
+
+  date_preset?: BloodRequestDatePreset;
+
+  date_from?: string;
+  date_to?: string;
+}
+
+export interface BloodRequestListResult {
+  items: BloodRequestListItem[];
+  meta: PaginationMeta;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Create / Update
+|--------------------------------------------------------------------------
+*/
 
 export interface CreateBloodRequestPayload {
   blood_type: BloodType;
@@ -207,6 +318,40 @@ export type DraftBloodRequestPayload = Partial<
 > & {
   recipient_ids?: number[];
 };
+
+export type UpdateBloodRequestPayload = {
+  version: number;
+
+  blood_type: BloodType;
+
+  units_required: number;
+
+  priority: BloodRequestPriority;
+
+  description: string;
+
+  needed_at: string;
+
+  notes?: string | null;
+
+  recipient_ids: number[];
+};
+
+export interface CancelBloodRequestPayload {
+  version: number;
+
+  cancellation_reason: string;
+}
+
+export interface SubmitBloodRequestPayload {
+  version: number;
+}
+
+/*
+|--------------------------------------------------------------------------
+| Form
+|--------------------------------------------------------------------------
+*/
 
 export interface BloodRequestFormValues {
   blood_type: BloodType | "";

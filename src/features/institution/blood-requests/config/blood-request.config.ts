@@ -1,24 +1,31 @@
-import type {
-  BloodRequestPriority,
-  BloodRequestStatus,
-  BloodType,
+import {
+  BLOOD_TYPES,
+  type BloodRequestPriority,
+  type BloodRequestStatus,
+  type BloodRequestStatusFilter,
 } from "../types/blood-request.types";
 
-export const BLOOD_TYPE_OPTIONS: BloodType[] = [
-  "A+",
-  "A-",
-  "B+",
-  "B-",
-  "AB+",
-  "AB-",
-  "O+",
-  "O-",
-];
+/*
+|--------------------------------------------------------------------------
+| Blood Types
+|--------------------------------------------------------------------------
+*/
 
-export const PRIORITY_OPTIONS: {
+export const BLOOD_TYPE_OPTIONS = BLOOD_TYPES.map((value) => ({
+  value,
+  label: value,
+}));
+
+/*
+|--------------------------------------------------------------------------
+| Priorities
+|--------------------------------------------------------------------------
+*/
+
+export const PRIORITY_OPTIONS: Array<{
   value: BloodRequestPriority;
   label: string;
-}[] = [
+}> = [
   {
     value: "normal",
     label: "عادي",
@@ -39,57 +46,143 @@ export const PRIORITY_LABELS: Record<BloodRequestPriority, string> = {
   emergency: "طارئ",
 };
 
-export const STATUS_LABELS: Record<BloodRequestStatus, string> = {
-  draft: "جديد",
-  pending: "قيد الاستجابة",
-  accepted: "مقبول بانتظار الإرسال",
+/*
+|--------------------------------------------------------------------------
+| Request Status Tabs
+|--------------------------------------------------------------------------
+*/
+
+export interface RequestStatusTab {
+  value?: BloodRequestStatusFilter;
+  label: string;
+}
+
+export const REQUEST_STATUS_TABS: RequestStatusTab[] = [
+  {
+    value: undefined,
+    label: "الكل",
+  },
+  {
+    value: "cancelled",
+    label: "ملغي",
+  },
+  {
+    value: "rejected",
+    label: "مرفوض",
+  },
+  {
+    value: "pending",
+    label: "قيد الانتظار",
+  },
+  {
+    value: "ready",
+    label: "جاهزة للتسليم",
+  },
+  {
+    value: "completed",
+    label: "مكتمل",
+  },
+];
+
+/*
+|--------------------------------------------------------------------------
+| Status Labels
+|--------------------------------------------------------------------------
+*/
+
+export const REQUEST_STATUS_LABELS: Record<BloodRequestStatusFilter, string> = {
+  draft: "مسودة",
+  pending: "قيد الانتظار",
+  accepted: "مقبول",
   preparing: "قيد التجهيز",
-  ready: "جاهز للإرسال",
+  ready: "جاهز للتسليم",
   completed: "مكتمل",
   rejected: "مرفوض",
   cancelled: "ملغي",
+  processing: "قيد المعالجة",
 };
 
-export const INSTITUTION_TYPE_LABELS: Record<string, string> = {
-  central_hospital: "مستشفى مركزي",
-
-  field_hospital: "مستشفى ميداني",
-
-  health_center: "مركز صحي",
-
-  blood_bank_association: "بنك دم",
-
-  independent_blood_center: "مركز دم مستقل",
-};
+/*
+|--------------------------------------------------------------------------
+| Dashboard Status Overview
+|--------------------------------------------------------------------------
+*/
 
 export const REQUEST_STATUS_OVERVIEW = [
   {
+    key: "completed",
     status: "completed",
+    value: "completed",
     label: "مكتمل",
-    className: "bg-[var(--institution-green)]",
+    color: "#50caa1",
+  },
+  {
+    key: "accepted",
+    status: "accepted",
+    value: "accepted",
+    label: "مقبول",
+    color: "#b89455",
+  },
+  {
+    key: "pending",
+    status: "pending",
+    value: "pending",
+    label: "قيد الانتظار",
+    color: "#5f91a6",
+  },
+  {
+    key: "draft",
+    status: "draft",
+    value: "draft",
+    label: "مسودة",
+    color: "#f4b33c",
+  },
+  {
+    key: "cancelled",
+    status: "cancelled",
+    value: "cancelled",
+    label: "ملغي",
+    color: "#9299a2",
+  },
+] as const satisfies ReadonlyArray<{
+  key: BloodRequestStatus;
+  status: BloodRequestStatus;
+  value: BloodRequestStatus;
+  label: string;
+  color: string;
+}>;
+
+/*
+|--------------------------------------------------------------------------
+| Request Progress
+|--------------------------------------------------------------------------
+*/
+
+export const REQUEST_PROGRESS_STEPS: Array<{
+  status: Extract<
+    BloodRequestStatus,
+    "pending" | "accepted" | "preparing" | "ready" | "completed"
+  >;
+  label: string;
+}> = [
+  {
+    status: "pending",
+    label: "قيد الانتظار",
   },
   {
     status: "accepted",
-    label: "مقبول بانتظار الإرسال",
-    className: "bg-[#b99b61]",
+    label: "مقبول",
   },
   {
-    status: "pending",
-    label: "قيد الاستجابة",
-    className: "bg-[var(--institution-blue)]",
+    status: "preparing",
+    label: "قيد التجهيز",
   },
   {
-    status: "draft",
-    label: "جديد",
-    className: "bg-[var(--institution-yellow)]",
+    status: "ready",
+    label: "جاهز للتسليم",
   },
   {
-    status: "cancelled",
-    label: "ملغي",
-    className: "bg-[#9299a2]",
+    status: "completed",
+    label: "مكتمل",
   },
-] satisfies {
-  status: BloodRequestStatus;
-  label: string;
-  className: string;
-}[];
+];
