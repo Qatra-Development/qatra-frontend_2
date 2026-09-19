@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, Menu, UserRound } from "lucide-react";
+import { ChevronDown, Menu, UserRound } from "./icons/HospitalDashboardIcons";
 
 export default function DashboardHeader() {
   return (

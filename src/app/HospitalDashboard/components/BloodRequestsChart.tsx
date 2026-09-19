@@ -1,27 +1,37 @@
-const chartData = [
-  { day: "السبت", value: 9 },
-  { day: "الأحد", value: 5 },
-  { day: "الاثنين", value: 1 },
-  { day: "الثلاثاء", value: 1 },
-  { day: "الأربعاء", value: 4 },
+const requestStates = [
+  { label: "طلبات جديدة", value: 14, status: "Pending", percent: 28, barColor: "#A97727", badgeBackground: "#F8E9CB", badgeColor: "#A97727" },
+  { label: "مقبولة", value: 26, status: "Accepted", percent: 53, barColor: "#438487", badgeBackground: "#EDF5F5", badgeColor: "#438487" },
+  { label: "قيد التجهيز", value: 8, status: "Preparing", percent: 16, barColor: "#AE1F3B", badgeBackground: "#FBECEF", badgeColor: "#AE1F3B" },
+  { label: "جاهزة", value: 5, status: "Ready", percent: 10, barColor: "#18B982", badgeBackground: "#E9FAF4", badgeColor: "#159D70" },
 ];
 
 export default function BloodRequestsChart() {
   return (
-    <article className="rounded-2xl border border-slate-100 bg-white p-5 shadow-[0_5px_20px_rgba(28,50,58,0.035)]">
-      <div>
-        <h2 className="text-sm font-bold text-slate-700">حركة الطلبات والتبرعات خلال آخر أسبوع</h2>
-        <p className="mt-1 text-[10px] text-slate-400">مقارنة عدد الطلبات اليومية</p>
-      </div>
-      <div className="mt-7 flex h-[148px] items-end justify-around gap-4 border-b border-slate-100 px-2">
-        {chartData.map(({ day, value }, index) => (
-          <div key={day} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-            <span className="text-[9px] font-semibold text-slate-500">{value}</span>
-            <div
-              className={`w-2.5 rounded-t-full ${index === 0 || index === 4 ? "bg-[#9e1d35]" : "bg-[#df9aa7]"}`}
-              style={{ height: `${Math.max(value * 10, 5)}px` }}
-            />
-            <span className="pb-2 text-[9px] text-slate-400">{day}</span>
+    <article className="min-h-[368px] rounded-[20px] bg-white px-[22px] pb-[26px] pt-[21px] shadow-[0_5px_20px_rgba(28,50,58,0.025)]">
+      <header className="text-right">
+        <h2 className="text-[17px] font-bold leading-6 text-[#233640]">حالة الطلبات الواردة</h2>
+        <p className="mt-1 text-[12px] leading-5 text-[#A6AFB4]">تفاصيل الحالات المسجلة</p>
+      </header>
+
+      <div className="mt-[31px] space-y-[25px]">
+        {requestStates.map((state) => (
+          <div key={state.status}>
+            <div className="flex min-h-6 items-center justify-between">
+              <span className="text-[14px] font-medium text-[#263A44]">{state.label}</span>
+              <div className="flex items-center gap-[9px]" dir="ltr">
+                <strong className="text-[20px] font-bold leading-6 text-[#203540]">{state.value}</strong>
+                <span
+                  className="inline-flex h-6 items-center gap-[5px] rounded-full px-[10px] text-[10px] font-bold"
+                  style={{ backgroundColor: state.badgeBackground, color: state.badgeColor }}
+                >
+                  {state.status}
+                  <span className="h-[5px] w-[5px] rounded-full bg-current" />
+                </span>
+              </div>
+            </div>
+            <div className="mr-auto mt-[12px] h-[5px] w-[90%] overflow-hidden rounded-full bg-[#F1F5F5]" dir="ltr">
+              <div className="h-full rounded-full" style={{ width: `${state.percent}%`, backgroundColor: state.barColor }} />
+            </div>
           </div>
         ))}
       </div>

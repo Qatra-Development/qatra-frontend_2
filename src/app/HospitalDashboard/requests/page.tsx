@@ -15,9 +15,9 @@ export default function IncomingRequestsPage() {
 
   return (
     <div className="mx-auto max-w-[1240px]">
-      <section className="mb-6">
-        <h1 className="text-xl font-bold text-[#22343c]">طلبات الدم الواردة</h1>
-        <p className="mt-2 text-xs text-[#8a959a]">تابع حالة الطلبات وتصنيفها حسب الأولوية</p>
+      <section className="mb-10">
+        <h1 className="order-0 flex h-[33px] w-[217px] flex-none grow-0 items-center text-right font-['Tajawal'] text-[27.2px] font-bold leading-[33px] text-[#172A3A]">طلبات الدم الواردة</h1>
+        <p className="mt-2 text-xs text-[#8a959a]">متابعة الطلبات رفضها او قبولها</p>
       </section>
 
       <LatestRequests
