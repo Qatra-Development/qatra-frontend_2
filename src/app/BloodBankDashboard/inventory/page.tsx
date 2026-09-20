@@ -132,7 +132,7 @@ export default function HospitalInventoryPage() {
           <p className="mt-[4px] text-[11px] leading-[15px] text-[#929fa7]">جميع وحدات الدم المسجلة في المخزون مع تفاصيل التخزين والصلاحية</p>
         </div>
         <div className="absolute left-0 top-[13px] flex flex-row items-start gap-[9px] p-0">
-          <Link href="/HospitalDashboard/inventory/alerts" className="flex h-[34px] items-center gap-[7px] rounded-[11px] bg-[#FFF7E6] px-[12px] font-['IBM_Plex_Sans_Arabic'] text-[12px] font-semibold text-[#805c2b] shadow-[0_5px_12px_rgba(180,35,58,0.2)]"><span className="grid h-[16px] w-[16px] place-items-center rounded-full bg-[#ffe7ab] text-[11px]">!</span>تنبيهات المخزون</Link>
+          <Link href="/BloodBankDashboard/inventory/alerts" className="flex h-[34px] items-center gap-[7px] rounded-[11px] bg-[#FFF7E6] px-[12px] font-['IBM_Plex_Sans_Arabic'] text-[12px] font-semibold text-[#805c2b] shadow-[0_5px_12px_rgba(180,35,58,0.2)]"><span className="grid h-[16px] w-[16px] place-items-center rounded-full bg-[#ffe7ab] text-[11px]">!</span>تنبيهات المخزون</Link>
           <AddBloodUnitDialog compact />
         </div>
       </header>

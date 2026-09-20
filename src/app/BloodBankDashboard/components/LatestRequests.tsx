@@ -27,7 +27,7 @@ const availableUnits = [
 
 type RequestStatus = "pending" | "waiting" | "completed";
 type RequestState = Record<string, { status: RequestStatus; unitIds: string[] }>;
-const storageKey = "qatra:HospitalDashboard:incoming-requests";
+const storageKey = "qatra:BloodBankDashboard:incoming-requests";
 const statusLabels: Record<RequestStatus, string> = {
   pending: "قيد الاستجابة",
   waiting: "مقبول بانتظار الإرسال",

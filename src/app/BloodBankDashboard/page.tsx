@@ -1,4 +1,4 @@
-import CreateBloodRequestDialog from "./components/CreateBloodRequestDialog";
+import AddBloodUnitDialog from "./components/AddBloodUnitDialog";
 import CreateDonationCallDialog from "./components/CreateDonationCallDialog";
 import BloodInventory from "./components/BloodInventory";
 import BloodRequestsChart from "./components/BloodRequestsChart";
@@ -12,7 +12,7 @@ export default function HospitalDashboardPage() {
       <section className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-xl font-bold leading-tight text-[#22343c]">
-            مرحبا ، مستشفى بنك الدم
+            مرحباً، مركز تبرع الدم
           </h1>
           <p className="mt-1.5 text-xs text-[#8a959a]">
             هذه نظرة سريعة على أداء مركز الدم الخاص بك.
@@ -21,7 +21,7 @@ export default function HospitalDashboardPage() {
 
         <div className="flex items-center gap-2.5">
           <CreateDonationCallDialog />
-          <CreateBloodRequestDialog />
+          <AddBloodUnitDialog />
         </div>
       </section>
 
