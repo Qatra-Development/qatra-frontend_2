@@ -68,11 +68,11 @@ export default function HospitalInventoryPage() {
   const [appliedDate, setAppliedDate] = useState<string | null>(null);
   const visibleUnits = units.map((unit) => editedUnits[unit.id] ?? unit).filter((unit) =>
     !excludedUnitIds.includes(unit.id) &&
-    unit.type === (selectedStock || "A+") &&
+    (search.trim() || unit.type === (selectedStock || "A+")) &&
     (status === "all" || unit.status === status) &&
     (appliedStatuses.length === 0 || appliedStatuses.includes(unit.status)) &&
     (appliedDate === null || (appliedDate === "soon" ? unit.status === "تنتهي قريبًا" : unit.status === "منتهية")) &&
-    `${unit.id} ${unit.type}`.toLowerCase().includes(search.trim().toLowerCase()),
+    unit.id.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   const toggleDraftStatus = (value: string) => {
@@ -143,8 +143,8 @@ export default function HospitalInventoryPage() {
           <p className="mt-[2px] text-[11px] leading-[15px] text-[#a4adb3]">جميع وحدات الدم المسجلة في المخزون مع تفاصيل التخزين والصلاحية</p>
         </div>
         <div className="mb-[16px] flex items-center gap-[8px]">
-          <label className="sr-only" htmlFor="inventory-search">ابحث برقم الطلب</label>
-          <input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث برقم الطلب..." className="h-[32px] w-[326px] max-w-full min-w-0 rounded-full border border-[#e8ecef] bg-white px-[14px] text-[11px] text-[#52616b] outline-none placeholder:text-[#a6afb4] focus:border-[#9e1b32]" />
+          <label className="sr-only" htmlFor="inventory-search">ابحث عن وحدة بالرقم التسلسلي</label>
+          <input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن وحدة بالرقم التسلسلي..." className="h-[32px] w-[326px] max-w-full min-w-0 rounded-full border border-[#e8ecef] bg-white px-[14px] text-[11px] text-[#52616b] outline-none placeholder:text-[#a6afb4] focus:border-[#9e1b32]" />
           <div className="relative shrink-0">
             <span aria-hidden="true" className="absolute -left-[3px] -top-[3px] z-10 h-[8px] w-[8px] rounded-full bg-[#9e1b32]" />
             <button type="button" onClick={() => filterDialogRef.current?.showModal()} className="flex h-[32px] w-[72px] items-center justify-center gap-[5px] rounded-[9px] border border-[#e8ecef] bg-white text-[10px] text-[#65747d] hover:border-[#cbd4d8]"><SlidersHorizontal aria-hidden="true" className="h-[12px] w-[12px]" />فلاتر</button>

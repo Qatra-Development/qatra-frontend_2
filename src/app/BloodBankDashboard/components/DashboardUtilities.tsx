@@ -2,11 +2,7 @@
 
 import Link from "next/link";
 import { Bell, IncomingRequestsIcon, InventoryManagementIcon, TriangleAlert } from "./icons/HospitalDashboardIcons";
-
-const alerts = [
-  { type: "B-", units: 6, expiry: "تنتهي خلال ٣ أيام" },
-  { type: "O-", units: 3, expiry: "تنتهي خلال 5 أيام" },
-];
+import type { BloodDashboard } from "../lib/api";
 
 const actions = [
   {
@@ -35,7 +31,8 @@ const actions = [
   },
 ];
 
-export default function DashboardUtilities() {
+export default function DashboardUtilities({ dashboard }: { dashboard: BloodDashboard | null }) {
+  const alerts = dashboard?.low_stock.filter(item => item.available_units <= 4).map(item => ({ type: item.blood_type, units: item.available_units, expiry: `الحد الأدنى: ${item.threshold} وحدات` })) ?? [];
   return (
     <section className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-2">
       <article className="h-fit w-full self-start rounded-[18px] bg-white px-[15px] pb-[20px] pt-[12px] shadow-[0_5px_20px_rgba(28,50,58,0.025)]">
@@ -71,7 +68,7 @@ export default function DashboardUtilities() {
               <Bell className="h-[15px] w-[15px]" strokeWidth={1.7} />
             </span>
             <span className="inline-flex h-[18px] items-center rounded-full bg-[#B4233A] px-2 text-[9px] font-bold text-white" dir="rtl">
-              3 تنبيه
+              {dashboard ? alerts.length + dashboard.expiring_units_count : "—"} تنبيه
             </span>
           </div>
         </div>
@@ -96,6 +93,7 @@ export default function DashboardUtilities() {
               </div>
             </div>
           ))}
+          {dashboard && alerts.length === 0 && <p className="text-xs text-[#A6AFB4]">لا توجد فصائل منخفضة المخزون</p>}
         </div>
       </article>
     </section>

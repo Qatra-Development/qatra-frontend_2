@@ -1,14 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateDonationCallDialog from "../../components/CreateDonationCallDialog";
-
-const filters = [
-  { id: "all", label: "الكل", count: 12 },
-  { id: "low", label: "مخزون منخفض", count: 3 },
-  { id: "expiring", label: "قريبة من الانتهاء", count: 7 },
-  { id: "expired", label: "منتهية الصلاحية", count: 2 },
-] as const;
+import { bankApi, bankListAll, type BloodUnit } from "../../lib/api";
 
 const alerts = [
   { id: "low", title: "مخزون منخفض", emphasis: "مخزون الدم", summary: "منخفض لبعض الفصائل، راجع المخزون والتبرعات", details: ["AB+ — 13 وحدة متاحة", "B- — 22 وحدة متاحة", "A- — 31 وحدة متاحة"] },
@@ -16,24 +10,38 @@ const alerts = [
   { id: "expired", title: "وحدات منتهية الصلاحية", emphasis: "إدارة الوحدات", summary: "وحدات لم تعد صالحة للاستخدام", details: ["راجع الوحدات المنتهية واستبعدها من المخزون"] },
 ] as const;
 
-const lowStocks = [
-  { type: "O-", units: 5, width: "20%", color: "#d52242", status: "منخفض جداً" },
-  { type: "B-", units: 8, width: "35%", color: "#f5a623", status: "منخفض" },
-  { type: "A-", units: 9, width: "40%", color: "#f5a623", status: "منخفض" },
-];
-
-const expiringUnits = [
-  { id: "BU-024", type: "A+", expires: "2026-09-20", status: "متبقي يومان" },
-  { id: "BU-031", type: "O-", expires: "2026-09-21", status: "متبقي 3 أيام" },
-  { id: "BU-045", type: "B+", expires: "2026-09-22", status: "متبقي 4 أيام" },
-];
-
-const expiredUnits = [
-  { id: "BU-012", type: "AB+", expires: "2026-09-16", status: "منتهية منذ يومين" },
-  { id: "BU-019", type: "O+", expires: "2026-09-13", status: "منتهية منذ 5 أيام" },
-];
-
 export default function InventoryAlertsPage() {
+  const [lowStocks, setLowStocks] = useState<{ type: string; units: number; threshold: number; width: string; color: string; status: string }[]>([]);
+  const [expiringUnits, setExpiringUnits] = useState<{ id: string; type: string; expires: string; status: string }[]>([]);
+  const [expiredUnits, setExpiredUnits] = useState<{ id: string; type: string; expires: string; status: string }[]>([]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [low, expiring, expired] = await Promise.all([
+          bankApi<{ blood_type: string; available_units: number; threshold: number }[]>("/alerts/low-stock"),
+          bankListAll<BloodUnit>("/alerts/expiring"),
+          bankListAll<BloodUnit>("/alerts/expired"),
+        ]);
+        setLowStocks(low.data.filter(item => item.available_units <= 4).map(item => ({
+          type: item.blood_type, units: item.available_units, threshold: item.threshold,
+          width: `${Math.min(100, item.threshold ? item.available_units / item.threshold * 100 : 0)}%`,
+          color: item.available_units <= 1 ? "#d52242" : "#f5a623",
+          status: item.available_units <= 1 ? "حرج" : "منخفض",
+        })));
+        setExpiringUnits(expiring.map(unit => ({ id: unit.unit_code, type: unit.blood_type, expires: unit.expires_at.slice(0, 10), status: `متبقي ${unit.days_until_expiration} أيام` })));
+        setExpiredUnits(expired.map(unit => ({ id: unit.unit_code, type: unit.blood_type, expires: unit.expires_at.slice(0, 10), status: "منتهية" })));
+        setError("");
+      } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذّر تحميل التنبيهات."); }
+    };
+    void load();
+  }, []);
+  const filters = [
+    { id: "all", label: "الكل", count: lowStocks.length + expiringUnits.length + expiredUnits.length },
+    { id: "low", label: "مخزون منخفض", count: lowStocks.length },
+    { id: "expiring", label: "قريبة من الانتهاء", count: expiringUnits.length },
+    { id: "expired", label: "منتهية الصلاحية", count: expiredUnits.length },
+  ] as const;
   const [activeFilter, setActiveFilter] = useState<(typeof filters)[number]["id"]>("all");
   const [expanded, setExpanded] = useState<Record<"low" | "expiring" | "expired", boolean>>({ low: true, expiring: true, expired: true });
   const [selectedCallType, setSelectedCallType] = useState<string | null>(null);
@@ -41,6 +49,7 @@ export default function InventoryAlertsPage() {
 
   return (
     <div className="mx-auto max-w-[1240px] pt-[46px] font-['Tajawal']">
+      {error && <p role="alert" className="text-xs text-[#B4233A]">{error}</p>}
       <header className="text-right">
         <h1 className="text-[22px] font-extrabold leading-[28px] text-[#223442]">تنبيهات المخزون</h1>
         <p className="mt-[2px] text-[11px] leading-[16px] text-[#98a4aa]">راجع التنبيهات التي تحتاج إلى إجراء</p>
@@ -76,7 +85,7 @@ export default function InventoryAlertsPage() {
                   <div key={stock.type} className="grid min-h-[44px] grid-cols-[23px_66px_minmax(0,1fr)_76px] items-center gap-x-[6px] py-1 sm:min-h-[89px] sm:grid-cols-[45px_90px_minmax(0,1fr)_155px] sm:gap-x-[17px] sm:py-2">
                     <span dir="ltr" className="text-right font-sans text-[10px] font-bold text-[#9e1b32] sm:text-[18px]">{stock.type}</span>
                     <span className={`justify-self-start whitespace-nowrap rounded-full px-[6px] py-[3px] text-[7px] font-medium sm:px-[13px] sm:py-[7px] sm:text-[11px] ${index === 0 ? "bg-[#fff0f2] text-[#a51e35]" : "bg-[#fff8e9] text-[#a57224]"}`}>• {stock.status}</span>
-                    <div className="min-w-0"><div className="mb-[3px] flex items-center justify-between gap-1 text-[6px] sm:mb-[7px] sm:gap-2 sm:text-[11px]"><span className="text-[#9aa6ae]">الحد الأدنى: {index === 0 ? 10 : index === 1 ? 12 : 15} وحدة</span><span className="whitespace-nowrap font-semibold text-[#263746]">{stock.units} وحدات متاحة</span></div><div dir="ltr" className="h-[2px] overflow-hidden rounded-full bg-[#eef3f5] sm:h-[4px]"><div className="ml-auto h-full rounded-full" style={{ width: stock.width === "20%" ? "48%" : stock.width === "35%" ? "67%" : "60%", backgroundColor: stock.color }} /></div></div>
+                    <div className="min-w-0"><div className="mb-[3px] flex items-center justify-between gap-1 text-[6px] sm:mb-[7px] sm:gap-2 sm:text-[11px]"><span className="text-[#9aa6ae]">الحد الأدنى: {stock.threshold} وحدة</span><span className="whitespace-nowrap font-semibold text-[#263746]">{stock.units} وحدات متاحة</span></div><div dir="ltr" className="h-[2px] overflow-hidden rounded-full bg-[#eef3f5] sm:h-[4px]"><div className="ml-auto h-full rounded-full" style={{ width: stock.width, backgroundColor: stock.color }} /></div></div>
                     <div className="justify-self-start"><CreateDonationCallDialog initialBloodType={stock.type} onOpen={() => setSelectedCallType(stock.type)} triggerLabel="إنشاء نداء تبرع" triggerClassName={`flex items-center gap-[2px] whitespace-nowrap rounded-[6px] border px-[5px] py-[5px] text-[7px] font-bold [&_svg]:h-[8px] [&_svg]:w-[8px] sm:gap-1 sm:rounded-[11px] sm:px-[17px] sm:py-[10px] sm:text-[14px] sm:[&_svg]:h-4 sm:[&_svg]:w-4 ${selectedCallType === stock.type ? "border-[#9e1b32] bg-[#9e1b32] text-white shadow-[0_4px_9px_rgba(158,27,50,0.15)]" : "border-[#e1e7ed] bg-white text-[#536475]"}`} /></div>
                   </div>
                 ))}

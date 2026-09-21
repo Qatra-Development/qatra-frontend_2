@@ -34,15 +34,15 @@ export default function DashboardHeader() {
               <Image src="/img/logo.png" alt="قطرة" width={30} height={30} />
               <span className="font-bold">قطرة</span>
             </Link>
-            <nav className="flex min-w-0 items-center gap-2 overflow-x-auto whitespace-nowrap text-xs text-[#7d898e]" aria-label="مسار الصفحة">
+            <nav className="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs text-[#7d898e]" aria-label="مسار الصفحة">
               <Link href={dashboardPath} className="hover:text-[#9e1b32]">قطرة</Link>
-              <span className="text-[#aeb7bb]" aria-hidden="true" dir="ltr">›</span>
+              <span className="text-[#aeb7bb]" aria-hidden="true" dir="ltr">‹</span>
               {crumbs.length === 0
                 ? <span className="font-medium text-[#303e44]" aria-current="page">لوحة التحكم</span>
                 : <Link href={dashboardPath} className="hover:text-[#9e1b32]">لوحة التحكم</Link>}
               {crumbs.map((crumb, index) => (
                 <span key={crumb.href} className="flex items-center gap-2">
-                  <span className="text-[#aeb7bb]" aria-hidden="true" dir="ltr">›</span>
+                  <span className="text-[#aeb7bb]" aria-hidden="true" dir="ltr">‹</span>
                   {index === crumbs.length - 1
                     ? <span className="font-medium text-[#303e44]" aria-current="page">{crumb.label}</span>
                     : crumb.href === `${dashboardPath}/donations`

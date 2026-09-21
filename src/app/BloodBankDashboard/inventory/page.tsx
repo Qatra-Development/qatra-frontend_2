@@ -1,37 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Heart, MoreHorizontal, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import AddBloodUnitDialog from "../components/AddBloodUnitDialog";
+import { bankApi, bankListAll, type BloodDashboard, type BloodUnit } from "../lib/api";
 
-const stocks = [
-  ["A+", 31], ["A-", 31], ["B+", 27], ["B-", 22],
-  ["AB+", 13], ["AB-", 30], ["O+", 31], ["O-", 25],
-] as const;
-
-const sampleUnits = [
-  { id: "UN-1001", type: "A+", donated: "24/09/2025", expires: "24/10/2025", status: "متاحة" },
-  { id: "UN-1002", type: "A+", donated: "23/09/2025", expires: "23/10/2025", status: "تم التسليم" },
-  { id: "UN-1003", type: "A+", donated: "22/09/2025", expires: "22/10/2025", status: "منتهية" },
-  { id: "UN-1005", type: "A+", donated: "21/09/2025", expires: "21/10/2025", status: "تنتهي قريبًا" },
-  { id: "UN-1007", type: "A+", donated: "20/09/2025", expires: "20/10/2025", status: "محجوزة" },
-];
-
-const units = stocks.flatMap(([type], stockIndex) => sampleUnits.map((unit) => ({
-  ...unit,
-  id: stockIndex === 0 ? unit.id : `UN-${(stockIndex + 1) * 1000 + Number(unit.id.slice(-3))}`,
-  type,
-})));
-
-type InventoryUnit = (typeof units)[number];
+type InventoryUnit = { backendId: number; id: string; type: string; donated: string; expires: string; status: string; rawStatus: BloodUnit["status"]; notes: string | null };
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 const toInputDate = (date: string) => { const [day, month, year] = date.split("/"); return `${year}-${month}-${day}`; };
-const toDisplayDate = (date: string) => { const [year, month, day] = date.split("-"); return `${day}/${month}/${year}`; };
 const addThirtyDays = (date: string) => {
   if (!date) return "";
   const [year, month, day] = date.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day + 30)).toISOString().slice(0, 10);
+  return new Date(Date.UTC(year, month - 1, day + 35)).toISOString().slice(0, 10);
 };
 const toEnglishDate = (date: string) => date
   ? new Intl.DateTimeFormat("en-US", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }).format(new Date(`${date}T00:00:00Z`))
@@ -43,11 +24,45 @@ const statusClasses: Record<string, string> = {
   "منتهية": "bg-[#fff0f1] text-[#a9223a]",
   "تنتهي قريبًا": "bg-[#fff5df] text-[#a97425]",
   "محجوزة": "bg-[#eef1f6] text-[#65758a]",
+  "مستبعدة": "bg-[#eef1f6] text-[#65758a]",
 };
 
 const filterStatuses = ["متاحة", "محجوزة", "تم التسليم", "تنتهي قريبًا", "منتهية"];
 
 export default function HospitalInventoryPage() {
+  const [units, setUnits] = useState<InventoryUnit[]>([]);
+  const [dashboard, setDashboard] = useState<BloodDashboard | null>(null);
+  const [loadError, setLoadError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const load = useCallback(async () => {
+    try {
+      const [summary, all] = await Promise.all([
+        bankApi<BloodDashboard>("/dashboard"),
+        bankListAll<BloodUnit>("/inventory"),
+      ]);
+      setDashboard(summary.data);
+      setUnits(all.map(unit => ({
+        backendId: unit.id,
+        id: unit.unit_code,
+        type: unit.blood_type,
+        donated: new Date(unit.collected_at).toLocaleDateString("en-GB"),
+        expires: new Date(unit.expires_at).toLocaleDateString("en-GB"),
+        status: unit.status === "available" && unit.days_until_expiration <= summary.data.settings.expiring_soon_days ? "تنتهي قريبًا" :
+          ({ available: "متاحة", reserved: "محجوزة", delivered: "تم التسليم", expired: "منتهية", discarded: "مستبعدة" } as const)[unit.status],
+        rawStatus: unit.status,
+        notes: unit.notes,
+      })));
+      setLoadError("");
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : "تعذّر تحميل المخزون.");
+    }
+  }, []);
+  useEffect(() => {
+    void load();
+    window.addEventListener("blood-bank:inventory-changed", load);
+    return () => window.removeEventListener("blood-bank:inventory-changed", load);
+  }, [load]);
+  const stocks = bloodTypes.map(type => [type, dashboard?.inventory_by_blood_type[type]?.available ?? 0] as const);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [selectedStock, setSelectedStock] = useState("");
@@ -56,23 +71,20 @@ export default function HospitalInventoryPage() {
   const editDialogRef = useRef<HTMLDialogElement>(null);
   const excludeDialogRef = useRef<HTMLDialogElement>(null);
   const [selectedUnit, setSelectedUnit] = useState<InventoryUnit | null>(null);
-  const [editedUnits, setEditedUnits] = useState<Record<string, InventoryUnit>>({});
   const [editType, setEditType] = useState<(typeof bloodTypes)[number]>("B+");
   const [editDonated, setEditDonated] = useState("");
   const editExpires = addThirtyDays(editDonated);
   const [excludeReason, setExcludeReason] = useState("");
-  const [excludedUnitIds, setExcludedUnitIds] = useState<string[]>([]);
   const [draftStatuses, setDraftStatuses] = useState<string[]>(["متاحة", "محجوزة", "تم التسليم"]);
   const [draftDate, setDraftDate] = useState("soon");
   const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
   const [appliedDate, setAppliedDate] = useState<string | null>(null);
-  const visibleUnits = units.map((unit) => editedUnits[unit.id] ?? unit).filter((unit) =>
-    !excludedUnitIds.includes(unit.id) &&
-    unit.type === (selectedStock || "A+") &&
+  const visibleUnits = units.filter((unit) =>
+    (search.trim() || !selectedStock || unit.type === selectedStock) &&
     (status === "all" || unit.status === status) &&
     (appliedStatuses.length === 0 || appliedStatuses.includes(unit.status)) &&
     (appliedDate === null || (appliedDate === "soon" ? unit.status === "تنتهي قريبًا" : unit.status === "منتهية")) &&
-    `${unit.id} ${unit.type}`.toLowerCase().includes(search.trim().toLowerCase()),
+    unit.id.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
   const toggleDraftStatus = (value: string) => {
@@ -81,36 +93,41 @@ export default function HospitalInventoryPage() {
       : [...current, value]);
   };
 
-  const openUnitDetails = (unit: InventoryUnit) => {
+  const openUnitDetails = async (unit: InventoryUnit) => {
     setSelectedUnit(unit);
     unitDialogRef.current?.showModal();
+    try {
+      const detail = (await bankApi<BloodUnit>(`/inventory/${unit.backendId}`)).data;
+      setSelectedUnit(current => current?.backendId === unit.backendId ? {
+        ...current,
+        notes: detail.notes,
+        rawStatus: detail.status,
+      } : current);
+    } catch (cause) {
+      setLoadError(cause instanceof Error ? cause.message : "تعذّر تحميل تفاصيل الوحدة.");
+    }
   };
 
   const openEditDialog = () => {
     if (!selectedUnit) return;
-    setEditType(selectedUnit.type);
+    setEditType(selectedUnit.type as (typeof bloodTypes)[number]);
     setEditDonated(toInputDate(selectedUnit.donated));
     unitDialogRef.current?.close();
     editDialogRef.current?.showModal();
   };
 
-  const saveUnitEdit = () => {
+  const saveUnitEdit = async () => {
     if (!selectedUnit || !editDonated || !editExpires) return;
-    const updated = { ...selectedUnit, type: editType, donated: toDisplayDate(editDonated), expires: toDisplayDate(editExpires) };
-    setEditedUnits((current) => ({ ...current, [updated.id]: updated }));
-    setSelectedUnit(updated);
-    editDialogRef.current?.close();
+    setBusy(true);
+    try {
+      await bankApi<BloodUnit>(`/inventory/${selectedUnit.backendId}`, { method: "PATCH", body: JSON.stringify({ blood_type: editType, collected_at: new Date(`${editDonated}T00:00:00`).toISOString() }) });
+      editDialogRef.current?.close();
+      await load();
+    } catch (cause) { setLoadError(cause instanceof Error ? cause.message : "تعذّر تعديل الوحدة."); }
+    finally { setBusy(false); }
   };
 
-  const stockCount = (type: string, count: number) => count + units.reduce((adjustment, unit) => {
-    const edited = editedUnits[unit.id];
-    if (edited) {
-      if (unit.type === type) adjustment -= 1;
-      if (edited.type === type) adjustment += 1;
-    }
-    if (excludedUnitIds.includes(unit.id) && (edited?.type ?? unit.type) === type) adjustment -= 1;
-    return adjustment;
-  }, 0);
+  const stockCount = (_type: string, count: number) => count;
 
   const openExcludeDialog = () => {
     setExcludeReason("");
@@ -118,10 +135,15 @@ export default function HospitalInventoryPage() {
     excludeDialogRef.current?.showModal();
   };
 
-  const confirmExclusion = () => {
+  const confirmExclusion = async () => {
     if (!selectedUnit || !excludeReason.trim()) return;
-    setExcludedUnitIds((current) => [...current, selectedUnit.id]);
-    excludeDialogRef.current?.close();
+    setBusy(true);
+    try {
+      await bankApi<BloodUnit>(`/inventory/${selectedUnit.backendId}`, { method: "PATCH", body: JSON.stringify({ status: "discarded", notes: excludeReason.trim() }) });
+      excludeDialogRef.current?.close();
+      await load();
+    } catch (cause) { setLoadError(cause instanceof Error ? cause.message : "تعذّر استبعاد الوحدة."); }
+    finally { setBusy(false); }
   };
 
   return (
@@ -133,9 +155,10 @@ export default function HospitalInventoryPage() {
         </div>
         <div className="absolute left-0 top-[13px] flex flex-row items-start gap-[9px] p-0">
           <Link href="/BloodBankDashboard/inventory/alerts" className="flex h-[34px] items-center gap-[7px] rounded-[11px] bg-[#FFF7E6] px-[12px] font-['IBM_Plex_Sans_Arabic'] text-[12px] font-semibold text-[#805c2b] shadow-[0_5px_12px_rgba(180,35,58,0.2)]"><span className="grid h-[16px] w-[16px] place-items-center rounded-full bg-[#ffe7ab] text-[11px]">!</span>تنبيهات المخزون</Link>
-          <AddBloodUnitDialog compact />
+          <AddBloodUnitDialog compact onCreated={load} />
         </div>
       </header>
+      {loadError && <p role="alert" className="mb-3 text-xs text-[#B4233A]">{loadError}</p>}
 
       <section className="rounded-[14px] border border-[#e9edf0] bg-white px-[16px] pb-[17px] pt-[28px] shadow-[0_4px_16px_rgba(30,36,50,0.025)]">
         <div className="mb-[18px] text-right">
@@ -143,8 +166,8 @@ export default function HospitalInventoryPage() {
           <p className="mt-[2px] text-[11px] leading-[15px] text-[#a4adb3]">جميع وحدات الدم المسجلة في المخزون مع تفاصيل التخزين والصلاحية</p>
         </div>
         <div className="mb-[16px] flex items-center gap-[8px]">
-          <label className="sr-only" htmlFor="inventory-search">ابحث برقم الطلب</label>
-          <input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث برقم الطلب..." className="h-[32px] w-[326px] max-w-full min-w-0 rounded-full border border-[#e8ecef] bg-white px-[14px] text-[11px] text-[#52616b] outline-none placeholder:text-[#a6afb4] focus:border-[#9e1b32]" />
+          <label className="sr-only" htmlFor="inventory-search">ابحث عن وحدة بالرقم التسلسلي</label>
+          <input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن وحدة بالرقم التسلسلي..." className="h-[32px] w-[326px] max-w-full min-w-0 rounded-full border border-[#e8ecef] bg-white px-[14px] text-[11px] text-[#52616b] outline-none placeholder:text-[#a6afb4] focus:border-[#9e1b32]" />
           <div className="relative shrink-0">
             <span aria-hidden="true" className="absolute -left-[3px] -top-[3px] z-10 h-[8px] w-[8px] rounded-full bg-[#9e1b32]" />
             <button type="button" onClick={() => filterDialogRef.current?.showModal()} className="flex h-[32px] w-[72px] items-center justify-center gap-[5px] rounded-[9px] border border-[#e8ecef] bg-white text-[10px] text-[#65747d] hover:border-[#cbd4d8]"><SlidersHorizontal aria-hidden="true" className="h-[12px] w-[12px]" />فلاتر</button>
@@ -154,7 +177,7 @@ export default function HospitalInventoryPage() {
         <div className="grid grid-cols-4 gap-x-[5px] gap-y-[9px]">
           {stocks.map(([type, count]) => (
             <button type="button" key={type} onClick={() => setSelectedStock(type)} aria-pressed={selectedStock === type} className={`relative flex h-[110px] flex-col items-center justify-between border px-[8px] pb-[9px] pt-[9px] text-center transition-colors ${selectedStock === type ? "rounded-[14px] border-[#d66d7e] bg-[#fff7f8] shadow-[0_2px_6px_rgba(158,27,50,0.09)]" : type === "AB+" ? "rounded-[9px] border-[#f1e5cf] bg-white" : "rounded-[9px] border-[#e7eaee] bg-white"}`}>
-              {type === "AB+" && selectedStock !== type && <span className="absolute right-[5px] top-[5px] rounded bg-[#fff3df] px-[3px] text-[8px] font-bold text-[#a87325]">منخفض</span>}
+              {dashboard && count <= 4 && selectedStock !== type && <span className="absolute right-[5px] top-[5px] rounded bg-[#fff3df] px-[3px] text-[8px] font-bold text-[#a87325]">{count <= 1 ? "حرج" : "منخفض"}</span>}
               {selectedStock === type && <span className="absolute right-[9px] top-[9px] rounded-full bg-[#9e1b32] px-[7px] py-[2px] text-[8px] font-bold text-white">محدد</span>}
               <span dir="ltr" className="font-['Tajawal'] text-[13px] font-extrabold leading-[15px] text-[#9e1b32]">{type}</span>
               <strong className="font-sans text-[18px] font-bold leading-[21px] text-[#1e303c]">{stockCount(type, count)}</strong>
@@ -250,9 +273,9 @@ export default function HospitalInventoryPage() {
               <div className="col-start-1 border-b border-[#edf0f2] py-[8px]"><dt className="font-bold">حالة الوحدة</dt><dd className="mt-[4px]"><span className={`rounded-full px-[7px] py-[3px] text-[10px] font-semibold ${statusClasses[selectedUnit.status]}`}>● {selectedUnit.status}</span></dd></div>
             </dl>
             <footer className="mt-auto flex items-center gap-[7px] pt-[10px]">
-              <button type="button" onClick={openEditDialog} className="h-[32px] rounded-[7px] bg-[#9e1b32] px-[13px] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تعديل البيانات</button>
+              <button type="button" onClick={openEditDialog} disabled={selectedUnit.rawStatus === "reserved" || selectedUnit.rawStatus === "delivered" || busy} className="h-[32px] rounded-[7px] bg-[#9e1b32] px-[13px] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تعديل البيانات</button>
               <button type="button" onClick={() => unitDialogRef.current?.close()} className="h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#61717b]">إغلاق</button>
-              <button type="button" onClick={openExcludeDialog} className="mr-auto h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#9e1b32]">استبعاد الوحدة</button>
+              <button type="button" onClick={openExcludeDialog} disabled={selectedUnit.rawStatus !== "available" || busy} className="mr-auto h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#9e1b32]">استبعاد الوحدة</button>
             </footer>
           </div>
         )}
@@ -273,7 +296,7 @@ export default function HospitalInventoryPage() {
             <div><label htmlFor="edit-expiration-date" className="mb-[7px] block text-[12px] font-bold text-[#536475]">تاريخ انتهاء الصلاحية</label><input id="edit-expiration-date" type="text" readOnly lang="en-US" dir="ltr" value={toEnglishDate(editExpires)} placeholder="MM/DD/YYYY" className="h-[36px] w-full rounded-[8px] border border-[#e5e9ec] bg-[#f7f9fa] px-2 font-sans text-[11px] text-[#536475] outline-none" /></div>
           </div>
 
-          <footer className="mt-[19px] flex items-center gap-[8px]"><button type="button" onClick={saveUnitEdit} className="h-[38px] rounded-[9px] bg-[#9e1b32] px-[17px] text-[12px] font-bold text-white shadow-[0_4px_9px_rgba(158,27,50,0.17)]">تعديل البيانات</button><button type="button" onClick={() => { editDialogRef.current?.close(); unitDialogRef.current?.showModal(); }} className="h-[38px] rounded-[9px] border border-[#e5e9ec] px-[14px] text-[12px] font-bold text-[#536475]">رجوع</button></footer>
+          <footer className="mt-[19px] flex items-center gap-[8px]"><button type="button" onClick={saveUnitEdit} disabled={busy} className="h-[38px] rounded-[9px] bg-[#9e1b32] px-[17px] text-[12px] font-bold text-white shadow-[0_4px_9px_rgba(158,27,50,0.17)]">تعديل البيانات</button><button type="button" onClick={() => { editDialogRef.current?.close(); unitDialogRef.current?.showModal(); }} className="h-[38px] rounded-[9px] border border-[#e5e9ec] px-[14px] text-[12px] font-bold text-[#536475]">رجوع</button></footer>
         </div>}
       </dialog>
       <dialog ref={excludeDialogRef} dir="rtl" aria-labelledby="exclude-unit-title" onClick={(event) => { if (event.target === excludeDialogRef.current) excludeDialogRef.current.close(); }} className="m-auto w-[min(430px,calc(100vw-24px))] max-h-[calc(100dvh-18px)] overflow-y-auto rounded-[12px] border-0 bg-white p-0 font-['Tajawal'] text-[#263746] shadow-[0_18px_50px_rgba(20,32,42,0.2)] backdrop:bg-[#1f2937]/55">
@@ -301,7 +324,7 @@ export default function HospitalInventoryPage() {
             </div>
             <footer className="mt-auto flex items-center justify-between pt-[12px]">
               <button type="button" onClick={() => { excludeDialogRef.current?.close(); unitDialogRef.current?.showModal(); }} className="h-[33px] rounded-[7px] border border-[#e7eaed] px-[13px] text-[12px] font-bold text-[#61717b]">رجوع</button>
-              <button type="button" onClick={confirmExclusion} disabled={!excludeReason.trim()} className="h-[33px] rounded-[7px] bg-[#9e1b32] px-[12px] text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">تأكيد الاستبعاد</button>
+              <button type="button" onClick={confirmExclusion} disabled={!excludeReason.trim() || busy} className="h-[33px] rounded-[7px] bg-[#9e1b32] px-[12px] text-[12px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-50">تأكيد الاستبعاد</button>
             </footer>
           </div>
         )}

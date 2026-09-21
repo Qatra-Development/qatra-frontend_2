@@ -74,7 +74,13 @@ export default function LoginForm() {
         Boolean(institution);
 
       if (isInstitution) {
-        window.location.assign("/HospitalPath");
+        const isApprovedBloodBank =
+          institution?.status === "approved" &&
+          institution.service_scope === "blood_bank_services_only";
+
+        window.location.assign(
+          isApprovedBloodBank ? "/BloodBankDashboard" : "/HospitalPath",
+        );
       } else {
         window.location.assign("/");
       }
