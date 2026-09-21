@@ -25,11 +25,15 @@ export async function POST() {
         { status: 502 },
       );
       response.cookies.delete(AUTH_COOKIE_NAME);
+      response.cookies.delete("account_type");
+      response.cookies.delete("login_destination");
       return response;
     }
   }
 
   const response = NextResponse.json({ success: true, message: "تم تسجيل الخروج بنجاح." });
   response.cookies.delete(AUTH_COOKIE_NAME);
+  response.cookies.delete("account_type");
+  response.cookies.delete("login_destination");
   return response;
 }

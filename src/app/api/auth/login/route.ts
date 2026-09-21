@@ -78,6 +78,26 @@ export async function POST(request: Request) {
       maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
     });
 
+    const institution = backendResponse.data.institution;
+    const destination =
+      accountType === "health_authority_admin"
+        ? "/dashboard"
+        : institution?.status === "approved" &&
+            institution.service_scope === "blood_bank_services_only"
+          ? "/BloodBankDashboard"
+          : accountType === "health_institution" ||
+              accountType === "institution" ||
+              accountType === "hospital" ||
+              Boolean(institution)
+            ? "/HospitalPath"
+            : "/";
+
+    response.cookies.set("login_destination", destination, {
+      path: "/",
+      sameSite: "lax",
+      maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
+    });
+
     return response;
   } catch (error) {
     return apiErrorResponse(error);

@@ -31,6 +31,16 @@ export function proxy(request: NextRequest) {
   }
 
   if (AUTH_ROUTES.has(pathname) && isAuthenticated) {
+    const destination = request.cookies.get("login_destination")?.value;
+    if (
+      destination === "/dashboard" ||
+      destination === "/BloodBankDashboard" ||
+      destination === "/HospitalPath" ||
+      destination === "/"
+    ) {
+      return NextResponse.redirect(new URL(destination, request.url));
+    }
+
     if (accountType === "health_authority_admin") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
