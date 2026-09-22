@@ -67,6 +67,15 @@ export default function LoginForm() {
         return;
       }
 
+      if (
+        institution?.status === "approved" &&
+        (institution.service_scope === "blood_request_and_blood_bank" ||
+          accountType === "blood_request_and_blood_bank")
+      ) {
+        window.location.assign(new URL("/HospitalDashboard", window.location.origin).toString());
+        return;
+      }
+
       const isInstitution =
         accountType === "health_institution" ||
         accountType === "institution" ||

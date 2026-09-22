@@ -35,6 +35,7 @@ export function proxy(request: NextRequest) {
     if (
       destination === "/dashboard" ||
       destination === "/BloodBankDashboard" ||
+      destination === "/HospitalDashboard" ||
       destination === "/HospitalPath" ||
       destination === "/"
     ) {

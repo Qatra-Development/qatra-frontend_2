@@ -85,6 +85,10 @@ export async function POST(request: Request) {
         : institution?.status === "approved" &&
             institution.service_scope === "blood_bank_services_only"
           ? "/BloodBankDashboard"
+          : institution?.status === "approved" &&
+              (institution.service_scope === "blood_request_and_blood_bank" ||
+                accountType === "blood_request_and_blood_bank")
+            ? "/HospitalDashboard"
           : accountType === "health_institution" ||
               accountType === "institution" ||
               accountType === "hospital" ||
