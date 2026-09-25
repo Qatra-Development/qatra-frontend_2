@@ -68,6 +68,50 @@ export const API_ENDPOINTS = {
     cancel: (requestId: number | string) =>
       `/institution/blood-requests/${requestId}/cancel`,
   },
+
+  bloodBankDonations: {
+    donationCalls: "/blood-bank/donation-calls",
+
+    donationCall: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}`,
+
+    matchingDonors: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}/matching-donors`,
+
+    invitations: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}/invitations`,
+
+    responses: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}/responses`,
+
+    closeCall: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}/close`,
+
+    cancelCall: (callId: number | string) =>
+      `/blood-bank/donation-calls/${callId}/cancel`,
+
+    voluntaryRequests: "/blood-bank/voluntary-donation-requests",
+
+    scheduleVoluntaryRequest: (requestId: number | string) =>
+      `/blood-bank/voluntary-donation-requests/${requestId}/schedule`,
+
+    declineVoluntaryRequest: (requestId: number | string) =>
+      `/blood-bank/voluntary-donation-requests/${requestId}/decline`,
+
+    donationProcesses: "/blood-bank/donation-processes",
+
+    donationProcess: (processId: number | string) =>
+      `/blood-bank/donation-processes/${processId}`,
+
+    completeDonationProcess: (processId: number | string) =>
+      `/blood-bank/donation-processes/${processId}/complete`,
+
+    cancelDonationProcess: (processId: number | string) =>
+      `/blood-bank/donation-processes/${processId}/cancel`,
+
+    scheduleCallResponse: (responseId: number | string) =>
+      `/blood-bank/donation-call-responses/${responseId}/schedule`,
+  },
 } as const;
 
 export const BFF_ENDPOINTS = {

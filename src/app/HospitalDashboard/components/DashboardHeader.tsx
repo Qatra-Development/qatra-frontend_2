@@ -1,21 +1,64 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+
+import { usePathname } from "next/navigation";
+
 import { ChevronDown, Menu, UserRound } from "lucide-react";
 
+function getSectionTitle(pathname: string) {
+  if (pathname.startsWith("/HospitalDashboard/donations/voluntary")) {
+    return "طلبات التبرع الطوعي";
+  }
+
+  if (pathname.startsWith("/HospitalDashboard/donations/upcoming")) {
+    return "المتبرعون القادمون";
+  }
+
+  if (pathname.startsWith("/HospitalDashboard/donations/calls")) {
+    return "نداءات التبرع";
+  }
+
+  if (pathname.startsWith("/HospitalDashboard/inventory")) {
+    return "إدارة المخزون";
+  }
+
+  if (pathname.startsWith("/HospitalDashboard/requests")) {
+    return "الطلبات الواردة";
+  }
+
+  return "لوحة التحكم";
+}
+
 export default function DashboardHeader() {
+  const pathname = usePathname();
+
+  const sectionTitle = getSectionTitle(pathname);
+
   return (
     <header className="bg-[#f7f9fa] px-5 pt-5 lg:px-7 lg:pt-7">
       <div className="mx-auto max-w-[1240px]">
         <div className="flex items-center justify-between pb-6">
           <div className="flex items-center gap-3">
-            <Link href="/HospitalDashboard" className="flex items-center gap-2 lg:hidden">
+            <Link
+              href="/HospitalDashboard"
+              className="flex items-center gap-2 lg:hidden"
+            >
               <Image src="/img/logo.png" alt="قطرة" width={30} height={30} />
+
               <span className="font-bold">قطرة</span>
             </Link>
-            <nav className="hidden items-center gap-2 text-xs text-[#7d898e] sm:flex" aria-label="مسار الصفحة">
+
+            <nav
+              className="hidden items-center gap-2 text-xs text-[#7d898e] sm:flex"
+              aria-label="مسار الصفحة"
+            >
               <span>قطرة</span>
+
               <span className="text-[#aeb7bb]">‹</span>
-              <span className="font-medium text-[#303e44]">لوحة التحكم</span>
+
+              <span className="font-medium text-[#303e44]">{sectionTitle}</span>
             </nav>
           </div>
 
@@ -38,25 +81,41 @@ export default function DashboardHeader() {
                   strokeWidth="2"
                 />
               </svg>
+
               <span className="absolute left-1.5 top-1 h-2 w-2 rounded-full bg-[#83141f]" />
             </button>
+
             <span className="hidden h-8 w-px bg-[#e5e9eb] sm:block" />
+
             <button className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm sm:flex">
-              <ChevronDown className="h-4 w-4 text-[#607078]" strokeWidth={1.7} />
+              <ChevronDown
+                className="h-4 w-4 text-[#607078]"
+                strokeWidth={1.7}
+              />
+
               <span className="mr-auto text-left">
-                <span className="block text-xs font-bold text-[#26373e]">أحمد محمد</span>
-                <span className="mt-0.5 block text-[10px] text-[#7f8b91]">مدير النظام</span>
+                <span className="block text-xs font-bold text-[#26373e]">
+                  أحمد محمد
+                </span>
+
+                <span className="mt-0.5 block text-[10px] text-[#7f8b91]">
+                  مدير النظام
+                </span>
               </span>
+
               <span className="grid h-8 w-8 place-items-center rounded-full border border-slate-100 bg-[#faecee] text-[#83141f]">
                 <UserRound className="h-4 w-4" />
               </span>
             </button>
-            <button className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 text-slate-500 lg:hidden" aria-label="فتح القائمة">
+
+            <button
+              className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 text-slate-500 lg:hidden"
+              aria-label="فتح القائمة"
+            >
               <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
-
       </div>
     </header>
   );
