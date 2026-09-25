@@ -78,6 +78,31 @@ export async function POST(request: Request) {
       maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
     });
 
+    if (backendResponse.data.institution) {
+      response.cookies.set(
+        "institution_status",
+        backendResponse.data.institution.status,
+        {
+          path: "/",
+          sameSite: "lax",
+          maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
+        },
+      );
+
+      response.cookies.set(
+        "service_scope",
+        backendResponse.data.institution.service_scope,
+        {
+          path: "/",
+          sameSite: "lax",
+          maxAge: rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24,
+        },
+      );
+    } else {
+      response.cookies.delete("institution_status");
+      response.cookies.delete("service_scope");
+    }
+
     return response;
   } catch (error) {
     return apiErrorResponse(error);
