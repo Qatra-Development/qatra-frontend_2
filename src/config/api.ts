@@ -112,6 +112,29 @@ export const API_ENDPOINTS = {
     scheduleCallResponse: (responseId: number | string) =>
       `/blood-bank/donation-call-responses/${responseId}/schedule`,
   },
+  donor: {
+    donationCalls: "/donor/donation-calls",
+
+    donationCall: (callId: number | string) =>
+      `/donor/donation-calls/${callId}`,
+
+    respondToDonationCall: (callId: number | string) =>
+      `/donor/donation-calls/${callId}/response`,
+
+    availability: "/donor/availability",
+
+    donationInstitutions: "/donor/donation-institutions",
+
+    voluntaryDonationRequests: "/donor/voluntary-donation-requests",
+
+    cancelVoluntaryDonationRequest: (requestId: number | string) =>
+      `/donor/voluntary-donation-requests/${requestId}/cancel`,
+
+    donationHistory: "/donor/donation-history",
+
+    donationHistoryItem: (processId: number | string) =>
+      `/donor/donation-history/${processId}`,
+  },
 } as const;
 
 export const BFF_ENDPOINTS = {

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useLogout } from "@/src/features/auth/hooks/use-logout";
 import {
   Bell,
   Building2,
@@ -34,6 +35,7 @@ const navigation = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
+  const { handleLogout, isLoggingOut } = useLogout();
   const voluntaryDonationsPath = "/HospitalDashboard/donations/voluntary";
   const donationCallsPath = "/HospitalDashboard/donations/calls";
   const upcomingDonorsPath = "/HospitalDashboard/donations/upcoming";
@@ -143,10 +145,10 @@ export default function DashboardSidebar() {
           <CircleHelp className="h-4 w-4 shrink-0" />
           المساعدة
         </Link>
-        <Link href="/login" className="flex h-10 w-full items-center gap-3 rounded-full px-4 text-xs text-slate-400 hover:bg-red-50 hover:text-[#a61f36]">
+        <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="flex h-10 w-full items-center gap-3 rounded-full px-4 text-xs text-slate-400 hover:bg-red-50 hover:text-[#a61f36] disabled:cursor-wait disabled:opacity-60">
           <LogOut className="h-4 w-4 shrink-0" />
-          تسجيل الخروج
-        </Link>
+          {isLoggingOut ? "جاري تسجيل الخروج..." : "تسجيل الخروج"}
+        </button>
       </div>
     </aside>
   );

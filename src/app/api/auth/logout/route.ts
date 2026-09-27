@@ -25,6 +25,7 @@ export async function POST() {
         { status: 502 },
       );
       response.cookies.delete(AUTH_COOKIE_NAME);
+      response.cookies.delete("account_type");
       response.cookies.delete("institution_status");
       response.cookies.delete("service_scope");
       return response;
@@ -33,6 +34,7 @@ export async function POST() {
 
   const response = NextResponse.json({ success: true, message: "تم تسجيل الخروج بنجاح." });
   response.cookies.delete(AUTH_COOKIE_NAME);
+  response.cookies.delete("account_type");
   response.cookies.delete("institution_status");
   response.cookies.delete("service_scope");
   return response;
