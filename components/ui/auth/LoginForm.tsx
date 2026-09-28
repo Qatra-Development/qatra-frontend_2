@@ -67,6 +67,12 @@ export default function LoginForm() {
         return;
       }
 
+      if (accountType === "donor") {
+        router.replace("/donor/dashboard");
+        router.refresh();
+        return;
+      }
+
       const isInstitution =
         accountType === "health_institution" ||
         accountType === "institution" ||

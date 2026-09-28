@@ -15,15 +15,20 @@ const pageNames: Record<string, string> = {
   "donations/voluntary": "طلبات التبرع الطوعي",
   "donations/calls": "نداءات التبرع",
   "donations/upcoming": "المتبرعون القادمون",
+  responders: "المتبرعون المستجيبون",
+  targeting: "المتبرعون المطابقون",
 };
 
 export default function DashboardHeader() {
   const pathname = usePathname();
   const segments = pathname.slice(dashboardPath.length).split("/").filter(Boolean);
-  const crumbs = segments.map((_, index) => {
-    const path = segments.slice(0, index + 1).join("/");
-    return { label: pageNames[path] ?? segments[index], href: `${dashboardPath}/${path}` };
-  });
+  const crumbs = segments
+    .map((segment, index) => {
+      const path = segments.slice(0, index + 1).join("/");
+      return { label: pageNames[path] ?? pageNames[segment] ?? segment, href: `${dashboardPath}/${path}` };
+    })
+    // A call ID has nested screens, but no standalone page to link to.
+    .filter((_, index) => !(segments[0] === "donations" && segments[1] === "calls" && index === 2));
 
   return (
     <header className="bg-[#f7f9fa] px-5 pt-5 lg:px-7 lg:pt-7">

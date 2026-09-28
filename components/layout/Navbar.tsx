@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import { cookies } from "next/headers";
+import { AUTH_COOKIE_NAME } from "@/src/lib/auth/constants";
 
 function QatraLogo() {
   return (
@@ -27,7 +29,9 @@ function QatraLogo() {
   );
 }
 
-export default function Navbar() {
+export default async function Navbar() {
+  const hasSession = Boolean((await cookies()).get(AUTH_COOKIE_NAME)?.value);
+
   return (
     <header className="w-full py-4 sm:py-6 px-4 sm:px-8 flex justify-between items-center absolute top-0 left-0 right-0 z-20 bg-transparent">
       {/* Right: Logo + Back link */}
@@ -51,17 +55,19 @@ export default function Navbar() {
       </nav>
 
       {/* Left: Login */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <span className="text-brand-gray text-xs sm:text-sm hidden sm:inline">
-          لديك حساب بالفعل؟
-        </span>
-        <Link
-          href="/login"
-          className="text-brand-red font-semibold text-xs sm:text-sm hover:underline whitespace-nowrap"
-        >
-          تسجيل الدخول
-        </Link>
-      </div>
+      {!hasSession && (
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <span className="text-brand-gray text-xs sm:text-sm hidden sm:inline">
+            لديك حساب بالفعل؟
+          </span>
+          <Link
+            href="/login"
+            className="text-brand-red font-semibold text-xs sm:text-sm hover:underline whitespace-nowrap"
+          >
+            تسجيل الدخول
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

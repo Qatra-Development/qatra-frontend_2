@@ -58,7 +58,7 @@ function getDashboardPath(
   }
 
   if (accountType === "donor") {
-    return "/";
+    return "/donor/dashboard";
   }
 
   return "/";
@@ -92,7 +92,9 @@ export function proxy(request: NextRequest) {
     pathname === "/HospitalPath" ||
     pathname.startsWith("/HospitalPath/") ||
     pathname === "/institution" ||
-    pathname.startsWith("/institution/");
+    pathname.startsWith("/institution/") ||
+    pathname === "/donor" ||
+    pathname.startsWith("/donor/");
 
   /*
    * أي صفحة محمية تحتاج تسجيل دخول.
@@ -167,6 +169,7 @@ export const config = {
     "/institution/:path*",
     "/HospitalDashboard/:path*",
     "/HospitalPath/:path*",
+    "/donor/:path*",
 
     "/login",
     "/logIn",

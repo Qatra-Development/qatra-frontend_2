@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useLogout } from "@/src/features/auth/hooks/use-logout";
 import {
   ActivityChartIcon,
   Bell,
@@ -19,8 +20,6 @@ import {
   UsersRound,
   UserRound,
 } from "./icons/HospitalDashboardIcons";
-import { clearAuthenticatedUser } from "@/src/features/auth/client/user-storage";
-import { logout } from "@/src/features/auth/services/auth.service";
 
 function MyRequestsIcon({ className }: { className?: string; strokeWidth?: number }) {
   return (
@@ -47,20 +46,11 @@ const navigation = [
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
+  const { handleLogout, isLoggingOut } = useLogout();
   const voluntaryDonationsPath = "/HospitalDashboard/donations/voluntary";
   const donationCallsPath = "/HospitalDashboard/donations/calls";
   const upcomingDonorsPath = "/HospitalDashboard/donations/upcoming";
   const [donationsOpen, setDonationsOpen] = useState(pathname.startsWith("/HospitalDashboard/donations"));
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } finally {
-      clearAuthenticatedUser();
-      router.replace("/login");
-    }
-  };
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-l border-slate-200/80 bg-white px-4 py-6 lg:flex">
@@ -166,9 +156,9 @@ export default function DashboardSidebar() {
           <CircleHelp className="h-4 w-4 shrink-0" strokeWidth={1.8} />
           المساعدة
         </Link>
-        <button type="button" onClick={handleLogout} className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-full px-4 text-right text-xs font-medium text-[#b8c1c7] hover:bg-red-50 hover:text-[#a61f36]">
+        <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="flex h-10 w-full cursor-pointer items-center gap-3 rounded-full px-4 text-right text-xs font-medium text-[#b8c1c7] hover:bg-red-50 hover:text-[#a61f36] disabled:cursor-wait disabled:opacity-60">
           <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-          تسجيل الخروج
+          {isLoggingOut ? "جاري تسجيل الخروج..." : "تسجيل الخروج"}
         </button>
       </div>
     </aside>
