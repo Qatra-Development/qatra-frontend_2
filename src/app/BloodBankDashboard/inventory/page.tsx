@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Heart, MoreHorizontal, SlidersHorizontal } from "lucide-react";
+import { Heart, ListFilter, MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 import AddBloodUnitDialog from "../components/AddBloodUnitDialog";
 import { bankApi, bankListAll, type BloodDashboard, type BloodUnit } from "../lib/api";
@@ -76,14 +76,20 @@ export default function HospitalInventoryPage() {
   const editExpires = addThirtyDays(editDonated);
   const [excludeReason, setExcludeReason] = useState("");
   const [draftStatuses, setDraftStatuses] = useState<string[]>(["متاحة", "محجوزة", "تم التسليم"]);
-  const [draftDate, setDraftDate] = useState("soon");
+  const [draftDates, setDraftDates] = useState<number[]>([]);
   const [appliedStatuses, setAppliedStatuses] = useState<string[]>([]);
-  const [appliedDate, setAppliedDate] = useState<string | null>(null);
+  const [appliedDates, setAppliedDates] = useState<number[]>([]);
+  const today = new Date();
+  const todayUtc = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
   const visibleUnits = units.filter((unit) =>
     (search.trim() || !selectedStock || unit.type === selectedStock) &&
     (status === "all" || unit.status === status) &&
     (appliedStatuses.length === 0 || appliedStatuses.includes(unit.status)) &&
-    (appliedDate === null || (appliedDate === "soon" ? unit.status === "تنتهي قريبًا" : unit.status === "منتهية")) &&
+    (appliedDates.length === 0 || (() => {
+      const [day, month, year] = unit.expires.split("/").map(Number);
+      const daysLeft = (Date.UTC(year, month - 1, day) - todayUtc) / 86400000;
+      return daysLeft >= 0 && appliedDates.some((days) => daysLeft <= days);
+    })()) &&
     unit.id.toLowerCase().includes(search.trim().toLowerCase()),
   );
 
@@ -91,6 +97,11 @@ export default function HospitalInventoryPage() {
     setDraftStatuses((current) => current.includes(value)
       ? current.filter((item) => item !== value)
       : [...current, value]);
+  };
+  const toggleDraftDate = (days: number) => {
+    setDraftDates((current) => current.includes(days)
+      ? current.filter((item) => item !== days)
+      : [...current, days]);
   };
 
   const openUnitDetails = async (unit: InventoryUnit) => {
@@ -139,7 +150,7 @@ export default function HospitalInventoryPage() {
     if (!selectedUnit || !excludeReason.trim()) return;
     setBusy(true);
     try {
-      await bankApi<BloodUnit>(`/inventory/${selectedUnit.backendId}`, { method: "PATCH", body: JSON.stringify({ status: "discarded", notes: excludeReason.trim() }) });
+      await bankApi<BloodUnit>(`/inventory/${selectedUnit.backendId}`, { method: "PATCH", body: JSON.stringify({ status: "discarded", discard_reason: excludeReason.trim() }) });
       excludeDialogRef.current?.close();
       await load();
     } catch (cause) { setLoadError(cause instanceof Error ? cause.message : "تعذّر استبعاد الوحدة."); }
@@ -169,8 +180,7 @@ export default function HospitalInventoryPage() {
           <label className="sr-only" htmlFor="inventory-search">ابحث عن وحدة بالرقم التسلسلي</label>
           <input id="inventory-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث عن وحدة بالرقم التسلسلي..." className="h-[32px] w-[326px] max-w-full min-w-0 rounded-full border border-[#e8ecef] bg-white px-[14px] text-[11px] text-[#52616b] outline-none placeholder:text-[#a6afb4] focus:border-[#9e1b32]" />
           <div className="relative shrink-0">
-            <span aria-hidden="true" className="absolute -left-[3px] -top-[3px] z-10 h-[8px] w-[8px] rounded-full bg-[#9e1b32]" />
-            <button type="button" onClick={() => filterDialogRef.current?.showModal()} className="flex h-[32px] w-[72px] items-center justify-center gap-[5px] rounded-[9px] border border-[#e8ecef] bg-white text-[10px] text-[#65747d] hover:border-[#cbd4d8]"><SlidersHorizontal aria-hidden="true" className="h-[12px] w-[12px]" />فلاتر</button>
+            <button type="button" onClick={() => filterDialogRef.current?.showModal()} className="flex h-[38px] w-[90px] items-center justify-center gap-[7px] rounded-[10px] border border-[#e1e6ed] bg-white text-[14px] text-[#536475] hover:border-[#cbd4d8]"><span>الفلاتر</span><ListFilter aria-hidden="true" className="h-[17px] w-[17px]" /></button>
           </div>
         </div>
 
@@ -187,19 +197,21 @@ export default function HospitalInventoryPage() {
           ))}
         </div>
 
-        <div className="mb-[22px] mt-[22px] flex flex-wrap items-center justify-end gap-[7px] font-['Tajawal'] text-[13px] leading-[18px]">
-          <button type="button" onClick={() => { setStatus("all"); setSearch(""); setSelectedStock(""); setAppliedStatuses([]); setAppliedDate(null); }} className="cursor-pointer rounded-full px-[6px] py-[5px] font-medium text-[#a51f36] transition hover:bg-[#fff3f5] focus-visible:outline-2 focus-visible:outline-[#9e1b32]">إعادة ضبط الكل</button>
+        {(appliedStatuses.length > 0 || appliedDates.length > 0) && <div className="mb-[22px] mt-[22px] flex flex-wrap items-center justify-end gap-[7px] font-['Tajawal'] text-[13px] leading-[18px]">
+          <button type="button" onClick={() => { setStatus("all"); setSearch(""); setSelectedStock(""); setDraftStatuses([]); setDraftDates([]); setAppliedStatuses([]); setAppliedDates([]); }} className="cursor-pointer rounded-full px-[6px] py-[5px] font-medium text-[#a51f36] transition hover:bg-[#fff3f5] focus-visible:outline-2 focus-visible:outline-[#9e1b32]">إعادة ضبط الكل</button>
           {([
             { value: "تنتهي قريبًا", label: "تنتهي قريبًا" },
             { value: "تم التسليم", label: "تم التسليم" },
             { value: "محجوزة", label: "محجوز" },
             { value: "متاحة", label: "متاح" },
-          ] as const).map((item) => (
-            <button key={item.value} type="button" onClick={() => setStatus(status === item.value ? "all" : item.value)} className={`inline-flex cursor-pointer items-center gap-[4px] rounded-full border px-[10px] py-[6px] transition hover:border-[#c8d0d5] focus-visible:outline-2 focus-visible:outline-[#9e1b32] ${status === item.value ? "border-[#d9a3ad] bg-[#fff4f6] text-[#9e1b32]" : "border-[#e1e6e9] bg-white text-[#697982]"}`}><span aria-hidden="true" className="text-[#96a2a9]">×</span>{item.label}</button>
+            { value: "منتهية", label: "منتهية" },
+          ] as const).filter((item) => appliedStatuses.includes(item.value)).map((item) => (
+            <button key={item.value} type="button" onClick={() => { setAppliedStatuses(current => current.filter(value => value !== item.value)); setDraftStatuses(current => current.filter(value => value !== item.value)); }} className="inline-flex cursor-pointer items-center gap-[4px] rounded-full border border-[#e1e6e9] bg-white px-[10px] py-[6px] text-[#697982] transition hover:border-[#c8d0d5] focus-visible:outline-2 focus-visible:outline-[#9e1b32]"><span aria-hidden="true" className="text-[#96a2a9]">×</span>{item.label}</button>
           ))}
-        </div>
+          {appliedDates.map((days) => <button key={days} type="button" onClick={() => { setAppliedDates(current => current.filter(value => value !== days)); setDraftDates(current => current.filter(value => value !== days)); }} className="inline-flex cursor-pointer items-center gap-[4px] rounded-full border border-[#e1e6e9] bg-white px-[10px] py-[6px] text-[#697982] transition hover:border-[#c8d0d5] focus-visible:outline-2 focus-visible:outline-[#9e1b32]"><span aria-hidden="true" className="text-[#96a2a9]">×</span>تنتهي خلال {days === 2 ? "يومين" : `${days} أيام`}</button>)}
+        </div>}
 
-        <div className="mt-[10px] overflow-x-auto">
+        <div className={`${appliedStatuses.length === 0 && appliedDates.length === 0 ? "mt-[18px]" : "mt-[10px]"} overflow-x-auto`}>
           <table className="w-full min-w-[650px] border-separate border-spacing-0 text-right text-[11px]">
             <thead className="bg-[#f1f6f7] text-[#263946]"><tr>
               <th className="rounded-r-[7px] px-[10px] py-[9px] font-bold">رقم الوحدة</th>
@@ -240,12 +252,13 @@ export default function HospitalInventoryPage() {
               ))}
             </div>
             <h3 className="mb-[10px] mt-[20px] text-[13px] font-bold">تاريخ الانتهاء</h3>
-            <label className="flex h-[36px] cursor-pointer items-center justify-between text-[12px] text-[#65747d]"><span>تنتهي قريبًا (30 يومًا)</span><input type="radio" name="expiry-filter" checked={draftDate === "soon"} onChange={() => setDraftDate("soon")} className="h-[13px] w-[13px] accent-[#9e1b32]" /></label>
-            <label className="flex h-[36px] cursor-pointer items-center justify-between text-[12px] text-[#65747d]"><span>منتهية</span><input type="radio" name="expiry-filter" checked={draftDate === "expired"} onChange={() => setDraftDate("expired")} className="h-[13px] w-[13px] accent-[#9e1b32]" /></label>
+            {([2, 5, 10] as const).map((days) => (
+              <label key={days} className="flex h-[36px] cursor-pointer items-center justify-between text-[12px] text-[#65747d]"><span>تنتهي خلال {days === 2 ? "يومين" : `${days} أيام`}</span><input type="checkbox" checked={draftDates.includes(days)} onChange={() => toggleDraftDate(days)} className="h-[9px] w-[9px] shrink-0 cursor-pointer appearance-none rounded-full border border-[#343434] bg-white checked:border-[#9e1b32] checked:bg-[#9e1b32] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9e1b32]" /></label>
+            ))}
           </div>
           <footer className="flex shrink-0 gap-[8px] px-[16px] pb-[14px] pt-[10px]">
-            <button type="button" onClick={() => { setAppliedStatuses(draftStatuses); setAppliedDate(draftDate); filterDialogRef.current?.close(); }} className="h-[36px] flex-1 rounded-[7px] bg-[#9e1b32] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تطبيق الفلاتر</button>
-            <button type="button" onClick={() => { setDraftStatuses([]); setDraftDate(""); setAppliedStatuses([]); setAppliedDate(null); filterDialogRef.current?.close(); }} className="h-[36px] flex-1 rounded-[7px] bg-[#f2f6f7] text-[12px] font-medium text-[#66767d]">إعادة ضبط</button>
+            <button type="button" onClick={() => { setAppliedStatuses(draftStatuses); setAppliedDates(draftDates); filterDialogRef.current?.close(); }} className="h-[36px] flex-1 rounded-[7px] bg-[#9e1b32] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تطبيق الفلاتر</button>
+            <button type="button" onClick={() => { setDraftStatuses([]); setDraftDates([]); setAppliedStatuses([]); setAppliedDates([]); filterDialogRef.current?.close(); }} className="h-[36px] flex-1 rounded-[7px] bg-[#f2f6f7] text-[12px] font-medium text-[#66767d]">إعادة ضبط</button>
           </footer>
         </div>
       </dialog>

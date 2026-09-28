@@ -95,7 +95,7 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
   const canOpenDetails = incomingMode;
   const filteredRequests = incomingMode
     ? requests.filter((request) => statusLabels[getStatus(request)] === statusOverride)
-    : requests;
+    : [...requests].sort((a, b) => new Date(b.raw.needed_at).getTime() - new Date(a.raw.needed_at).getTime()).slice(0, 2);
   const counts = requests.reduce<Record<RequestStatus, number>>((result, request) => {
     result[getStatus(request)] += 1;
     return result;

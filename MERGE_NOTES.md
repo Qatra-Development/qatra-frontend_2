@@ -89,3 +89,33 @@ git status --short --branch
 
 خروج أوامر `--is-ancestor` بالقيمة 0 يثبت وجود تاريخ كل فرع في النتيجة.
 الدمج محلي فقط؛ لم يُنفذ `git push` ولم تُحذف أي فروع.
+
+## استكمال الدمج: ashraf
+
+أُضيف `origin/ashraf` عند `9462cbb` فوق نتيجة الدمج السابقة `a332ecd` لضم ربط شاشات `sprint4` بالـ API.
+
+```sh
+git fetch origin
+git branch backup/develope-before-ashraf-2026-09-28 develope
+git merge --no-ff --no-commit origin/ashraf
+git diff --cc
+```
+
+اندمجت إضافات الربط في 14 ملفًا دون تعارض، ومنها خدمة `HospitalDashboard/lib/api.ts` والمخزون والإحصاءات والطلبات والتنبيهات.
+اقتصرت التعارضات على `components/ui/auth/LoginForm.tsx` و`src/app/api/auth/login/route.ts` و`src/proxy.ts`؛ اعتمدت محتوياتها من `sprint-5` باستخدام `git show sprint-5:<path>` ثم `apply_patch`، بناءً على تعليماتك.
+تحققت بمقارنة Git أن إضافات الربط مطابقة لـ `origin/ashraf`، وأن ملفات التوجيه ومجلد التبرعات وميزات المتبرع والتبرعات مطابقة لـ `sprint-5`.
+
+حُلّت التعارضات باعتماد `sprint-5` وثُبّت الدمج في commit مستقل. نجح البناء عبر Webpack بما فيه TypeScript.
+
+```sh
+git add components/ui/auth/LoginForm.tsx src/app/api/auth/login/route.ts src/proxy.ts MERGE_NOTES.md
+git diff --cached --check
+git commit -m "Merge Ashraf's dashboard API integration, keeping sprint 5 routing"
+git merge-base --is-ancestor origin/ashraf develope
+git merge-base --is-ancestor sprint-5 develope
+git status --short --branch
+```
+
+نجحت اختبارات auth الـ13، و12 فحصًا محليًا باستجابات وهمية لخدمتي لوحتي المستشفى وبنك الدم، شملت القراءة والصفحات وquery parameters وإرسال الإجراء وأخطاء 422/403/401. لم تُستخدم حسابات أو بيانات حقيقية، ولم يُنفذ push لهذا الدمج.
+
+بعد إضافة `ashraf` أصبح lint الكامل يُظهر 5 أخطاء و15 تحذيرًا سابقة في ملفات المصدر، دون أخطاء تعارض؛ زال خطأ `HospitalDashboard/components/LatestRequests.tsx` بفضل تحديث الفرع نفسه. لم أُجرِ refactor إضافيًا خارج الدمج.

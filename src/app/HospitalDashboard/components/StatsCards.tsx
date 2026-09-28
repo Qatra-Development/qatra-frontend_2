@@ -1,3 +1,7 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { bankApi, type BloodDashboard } from "../lib/api";
 import { BadgeCheck, IncomingRequestsStatsIcon, Megaphone, TriangleAlert } from "./icons/HospitalDashboardIcons";
 
 const stats = [
@@ -8,9 +12,18 @@ const stats = [
 ];
 
 export default function StatsCards() {
+  const [dashboard, setDashboard] = useState<BloodDashboard | null>(null);
+  useEffect(() => {
+    const load = () => { void bankApi<BloodDashboard>("/dashboard").then(result => setDashboard(result.data)).catch(() => setDashboard(null)); };
+    load();
+    window.addEventListener("hospital:inventory-changed", load);
+    return () => window.removeEventListener("hospital:inventory-changed", load);
+  }, []);
+  const summary = dashboard?.requests_summary;
+  const values = [summary ? summary.incoming + summary.accepted + summary.preparing + summary.ready + summary.completed : null, summary?.incoming, dashboard?.inventory_summary.available, null];
   return (
     <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="ملخص الطلبات">
-      {stats.map(({ label, value, icon: Icon, color, bg }) => (
+      {stats.map(({ label, value, icon: Icon, color, bg }, index) => (
         <article key={label} className="relative min-h-[120px] overflow-hidden rounded-xl border border-[#f0f2f3] bg-white px-5 py-5 shadow-[0_5px_20px_rgba(28,50,58,0.025)]">
           <div className="relative z-10 flex w-full items-center justify-between text-xs font-medium text-[#58676d]">
             <span className="order-0 flex h-4 w-auto flex-none grow-0 items-center whitespace-nowrap text-right font-['Tajawal'] text-[11px] font-medium leading-4 text-[#594142]">
@@ -22,7 +35,7 @@ export default function StatsCards() {
               strokeWidth={label === "إجمالي وحدات الدم المتاحة" ? 2.5 : 1.7}
             />
           </div>
-          <strong className="absolute bottom-5 right-5 z-10 text-xl font-bold leading-none text-[#26373d]">{value}</strong>
+          <strong className="absolute bottom-5 right-5 z-10 text-xl font-bold leading-none text-[#26373d]">{values[index] ?? (index === 3 ? value : "—")}</strong>
           <span
             className={`absolute order-0 flex-none grow-0 rounded-full ${
               label === "إجمالي وحدات الدم المتاحة"

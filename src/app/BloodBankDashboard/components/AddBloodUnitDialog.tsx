@@ -22,7 +22,7 @@ export default function AddBloodUnitDialog({ compact = false, onCreated }: { com
   const [createdCodes, setCreatedCodes] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
   const fieldsLocked = saving || saved || createdCodes.length > 0;
-  const expiresAt = collectedAt ? new Date(new Date(`${collectedAt}T00:00:00`).getTime() + 35 * 86400000).toISOString().slice(0, 10) : "";
+  const expiresAt = collectedAt ? new Date(Date.parse(`${collectedAt}T00:00:00Z`) + 30 * 86400000).toISOString().slice(0, 10) : "";
   const submit = async () => {
     if (!collectedAt || saving || saved) return;
     setSaving(true);
@@ -189,7 +189,7 @@ export default function AddBloodUnitDialog({ compact = false, onCreated }: { com
             <div>
               <label htmlFor="donation-date" className="mb-3 block text-[11px] font-bold text-[#53636C]">تاريخ التبرع</label>
               <div className="relative">
-                <input id="donation-date" type="date" lang="en" dir="ltr" value={collectedAt} max={todayLocal()} disabled={fieldsLocked} onChange={event => setCollectedAt(event.target.value)} className="h-9 w-full rounded-md border border-[#E7EAED] bg-white px-2 pl-9 font-sans text-[11px] text-[#697982] outline-none focus:border-[#9E1B32] [&::-webkit-calendar-picker-indicator]:pointer-events-none [&::-webkit-calendar-picker-indicator]:opacity-0" />
+                <input id="donation-date" type="date" lang="en" dir="ltr" value={collectedAt} max={todayLocal()} disabled={fieldsLocked} readOnly className="h-9 w-full rounded-md border border-[#E7EAED] bg-white px-2 pl-9 font-sans text-[11px] text-[#697982] outline-none focus:border-[#9E1B32] [&::-webkit-calendar-picker-indicator]:pointer-events-none [&::-webkit-calendar-picker-indicator]:opacity-0" />
                 <span aria-hidden="true" className="absolute inset-y-0 left-0 grid w-9 place-items-center text-[#87939A]"><CalendarDays className="h-4 w-4" /></span>
               </div>
             </div>
