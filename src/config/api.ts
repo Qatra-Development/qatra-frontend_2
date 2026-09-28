@@ -49,6 +49,25 @@ export const API_ENDPOINTS = {
     status: "/institution/status",
     resubmit: "/institution/resubmit",
   },
+
+  institutionBloodRequests: {
+    base: "/institution/blood-requests",
+
+    summary: "/institution/blood-requests/summary",
+
+    suppliers: "/institution/blood-requests/suppliers",
+
+    drafts: "/institution/blood-requests/drafts",
+
+    detail: (requestId: number | string) =>
+      `/institution/blood-requests/${requestId}`,
+
+    submit: (requestId: number | string) =>
+      `/institution/blood-requests/${requestId}/submit`,
+
+    cancel: (requestId: number | string) =>
+      `/institution/blood-requests/${requestId}/cancel`,
+  },
 } as const;
 
 export const BFF_ENDPOINTS = {

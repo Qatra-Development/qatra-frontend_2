@@ -10,13 +10,13 @@
   --font-tajawal: Tajawal, sans-serif;
 
   /* Brand Colors */
-  --color-brand-red: #9B1B30;
+  --color-brand-red: #9b1b30;
   --color-brand-red-dark: #811225;
-  --color-brand-blue: #1A2A3A;
-  --color-brand-gray: #6B7280;
-  --color-brand-gray-light: #9CA3AF;
-  --color-brand-gray-lighter: #F3F4F6;
-  --color-brand-bg: #FDF7F7;
+  --color-brand-blue: #1a2a3a;
+  --color-brand-gray: #6b7280;
+  --color-brand-gray-light: #9ca3af;
+  --color-brand-gray-lighter: #f3f4f6;
+  --color-brand-bg: #fdf7f7;
 }
 
 body {
@@ -154,6 +154,23 @@ body {
   --admin-section-title-size: 0.875rem;
   --admin-body-size: 0.875rem;
   --admin-caption-size: 0.75rem;
+
+  /* Institution dashboard */
+  --institution-blue: #6f96a0;
+  --institution-blue-soft: #eef5f6;
+
+  --institution-green: #28b784;
+  --institution-green-soft: #eefaf5;
+
+  --institution-yellow: #e4ad3f;
+  --institution-yellow-soft: #fff8df;
+
+  --institution-chart-primary: #b51f3b;
+  --institution-chart-soft: #d99aa6;
+
+  --institution-overlay: rgba(27, 36, 46, 0.56);
+
+  --institution-table-head: #edf6f5;
 }
 
 @media (max-width: 640px) {
@@ -289,5 +306,29 @@ body {
   .admin-btn-secondary:disabled {
     cursor: not-allowed;
     opacity: 0.4;
+  }
+
+  .institution-card {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border-soft);
+    border-radius: var(--admin-card-radius);
+    box-shadow: var(--admin-card-shadow);
+  }
+
+  .institution-control {
+    min-height: var(--admin-control-height);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-control-radius);
+    background: white;
+    outline: none;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  .institution-control:focus {
+    border-color: color-mix(in srgb, var(--admin-danger) 45%, transparent);
+
+    box-shadow: 0 0 0 3px rgba(181, 31, 59, 0.07);
   }
 }
