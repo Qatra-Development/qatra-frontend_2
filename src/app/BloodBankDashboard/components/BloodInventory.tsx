@@ -1,15 +1,11 @@
-const bloodTypes = [
-  { type: "A+", units: 31, state: "وحدة متاحة", percent: 51, level: "available" },
-  { type: "A-", units: 23, state: "وحدة متاحة", percent: 50, level: "available" },
-  { type: "B+", units: 27, state: "وحدة متاحة", percent: 54, level: "available" },
-  { type: "B-", units: 8, state: "مخزون منخفض", percent: 20, level: "low" },
-  { type: "AB+", units: 24, state: "وحدة متاحة", percent: 48, level: "available" },
-  { type: "AB-", units: 16, state: "وحدة متاحة", percent: 30, level: "available" },
-  { type: "O-", units: 5, state: "مخزون منخفض جداً", percent: 10, level: "critical" },
-  { type: "O+", units: 31, state: "وحدة متاحة", percent: 61, level: "available" },
-];
+import type { BloodDashboard } from "../lib/api";
 
-export default function BloodInventory() {
+export default function BloodInventory({ dashboard }: { dashboard: BloodDashboard | null }) {
+  const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O-", "O+"].map(type => {
+    const units = dashboard?.inventory_by_blood_type[type]?.available ?? 0;
+    const level = !dashboard ? "available" : units <= 1 ? "critical" : units <= 4 ? "low" : "available";
+    return { type, units: dashboard ? units : "—", state: !dashboard ? "—" : level === "critical" ? "مخزون حرج" : level === "low" ? "مخزون منخفض" : "وحدة متاحة", percent: Math.min(100, units / 5 * 100), level };
+  });
   return (
     <article className="flex h-full min-h-[269px] w-full flex-col rounded-[18px] bg-white px-4 pb-4 pt-[14px] shadow-[0_5px_20px_rgba(28,50,58,0.025)]">
       <div className="flex items-center justify-between px-1">

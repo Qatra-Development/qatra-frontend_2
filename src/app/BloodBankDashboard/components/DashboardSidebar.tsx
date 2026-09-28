@@ -22,22 +22,10 @@ import {
 import { clearAuthenticatedUser } from "@/src/features/auth/client/user-storage";
 import { logout } from "@/src/features/auth/services/auth.service";
 
-function MyRequestsIcon({ className }: { className?: string; strokeWidth?: number }) {
-  return (
-    <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
-      <path d="M1.5 3h7M1.5 8h7M1.5 13h7" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <circle cx="12.5" cy="3" r="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <circle cx="12.5" cy="8" r="1.5" stroke="currentColor" strokeWidth="1.5" />
-      <path d="m11.2 11.7 2.6 2.6m0-2.6-2.6 2.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 const navigation = [
-  { label: "لوحة التحكم", href: "/HospitalDashboard", icon: House },
-  { label: "طلباتي", href: "/HospitalDashboard/my-requests", icon: MyRequestsIcon },
-  { label: "إدارة المخزون", href: "/HospitalDashboard/inventory", icon: MedicalBriefcaseIcon },
-  { label: "الطلبات الواردة", href: "/HospitalDashboard/requests", icon: OutlinedPlusIcon },
+  { label: "لوحة التحكم", href: "/BloodBankDashboard", icon: House },
+  { label: "إدارة المخزون", href: "/BloodBankDashboard/inventory", icon: MedicalBriefcaseIcon },
+  { label: "الطلبات الواردة", href: "/BloodBankDashboard/requests", icon: OutlinedPlusIcon },
   { label: "إدارة التبرعات", href: "#", icon: MedicalBriefcaseIcon, expandable: true },
   { label: "بيانات المؤسسة", href: "/HospitalPath", icon: InstitutionBuildingIcon },
   { label: "الملف الشخصي", href: "#", icon: UserRound },
@@ -48,10 +36,10 @@ const navigation = [
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const voluntaryDonationsPath = "/HospitalDashboard/donations/voluntary";
-  const donationCallsPath = "/HospitalDashboard/donations/calls";
-  const upcomingDonorsPath = "/HospitalDashboard/donations/upcoming";
-  const [donationsOpen, setDonationsOpen] = useState(pathname.startsWith("/HospitalDashboard/donations"));
+  const voluntaryDonationsPath = "/BloodBankDashboard/donations/voluntary";
+  const donationCallsPath = "/BloodBankDashboard/donations/calls";
+  const upcomingDonorsPath = "/BloodBankDashboard/donations/upcoming";
+  const [donationsOpen, setDonationsOpen] = useState(pathname.startsWith("/BloodBankDashboard/donations"));
 
   const handleLogout = async () => {
     try {
@@ -64,7 +52,7 @@ export default function DashboardSidebar() {
 
   return (
     <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-l border-slate-200/80 bg-white px-4 py-6 lg:flex">
-      <Link href="/HospitalDashboard" className="mb-8 flex items-center gap-2 px-3">
+      <Link href="/BloodBankDashboard" className="mb-8 flex items-center gap-2 px-3">
         <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg">
           <Image
             src="/img/logo.png"

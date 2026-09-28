@@ -27,6 +27,8 @@ export async function POST() {
       response.cookies.delete(AUTH_COOKIE_NAME);
       response.cookies.delete("institution_status");
       response.cookies.delete("service_scope");
+      response.cookies.delete("account_type");
+      response.cookies.delete("login_destination");
       return response;
     }
   }
@@ -35,5 +37,7 @@ export async function POST() {
   response.cookies.delete(AUTH_COOKIE_NAME);
   response.cookies.delete("institution_status");
   response.cookies.delete("service_scope");
+  response.cookies.delete("account_type");
+  response.cookies.delete("login_destination");
   return response;
 }

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, UserRound } from "./icons/HospitalDashboardIcons";
 
-const dashboardPath = "/HospitalDashboard";
+const dashboardPath = "/BloodBankDashboard";
 const pageNames: Record<string, string> = {
   inventory: "إدارة المخزون",
   "inventory/alerts": "تنبيهات المخزون",
