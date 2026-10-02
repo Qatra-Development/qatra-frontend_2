@@ -25,7 +25,7 @@ const navigation = [
 
   {
     label: "نداءات التبرع",
-    href: "/donor/dashboard#donation-calls",
+    href: "/donor/calls",
     icon: Megaphone,
   },
 
@@ -43,7 +43,7 @@ const navigation = [
 
   {
     label: "الإشعارات",
-    href: "#",
+    href: "/donor/notifications",
     icon: Bell,
   },
 ];
@@ -109,9 +109,7 @@ export default function DonorSidebar() {
             const active =
               href === "/donor/dashboard"
                 ? pathname === "/donor/dashboard"
-                : href === "/donor/history"
-                  ? pathname.startsWith("/donor/history")
-                  : false;
+                : pathname.startsWith(href);
 
             return (
               <Link

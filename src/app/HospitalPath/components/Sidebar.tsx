@@ -3,13 +3,16 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { logout } from "@/src/features/auth/services/auth.service";
 import { clearAuthenticatedUser } from "@/src/features/auth/client/user-storage";
 import { toast } from "sonner";
 
 export default function Sidebar() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isNotificationsActive = pathname.startsWith("/HospitalPath/notifications");
+  const isStatusActive = !isNotificationsActive;
 
   const handleLogout = async () => {
     try {
@@ -53,11 +56,11 @@ export default function Sidebar() {
           {/* Active Tab: حالة الطلب */}
           <Link
             href="/HospitalPath"
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-[#faecee] text-[#83141f] font-bold text-xs shadow-2xs transition-colors"
+            className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-colors ${isStatusActive ? "bg-[#faecee] text-[#83141f] font-bold shadow-2xs" : "text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-medium"}`}
           >
             <div className="flex items-center gap-2.5">
               <svg
-                className="w-4 h-4 text-[#83141f]"
+                className={`w-4 h-4 ${isStatusActive ? "text-[#83141f]" : "text-slate-400"}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -98,12 +101,12 @@ export default function Sidebar() {
 
           {/* Inactive Tab: الإشعارات */}
           <Link
-            href="#"
-            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-medium text-xs transition-colors"
+            href="/HospitalPath/notifications"
+            className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-colors ${isNotificationsActive ? "bg-[#faecee] text-[#83141f] font-bold shadow-2xs" : "text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-medium"}`}
           >
             <div className="flex items-center gap-2.5">
               <svg
-                className="w-4 h-4 text-slate-400"
+                className={`w-4 h-4 ${isNotificationsActive ? "text-[#83141f]" : "text-slate-400"}`}
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

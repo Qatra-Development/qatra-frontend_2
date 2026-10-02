@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Bell, ChevronDown, UserRound } from "lucide-react";
 
 import { usePathname } from "next/navigation";
@@ -9,8 +10,16 @@ interface Props {
 }
 
 function getPageTitle(pathname: string) {
+  if (pathname.startsWith("/donor/calls")) {
+    return "نداءات التبرع";
+  }
+
   if (pathname.startsWith("/donor/history")) {
     return "سجل تبرعاتي";
+  }
+
+  if (pathname.startsWith("/donor/notifications")) {
+    return "الإشعارات";
   }
 
   return "لوحة التحكم";
@@ -18,6 +27,7 @@ function getPageTitle(pathname: string) {
 
 export default function DonorHeader({ userName = "المتبرع" }: Props) {
   const pathname = usePathname();
+  const isNotifications = pathname.startsWith("/donor/notifications");
 
   return (
     <header
@@ -43,10 +53,14 @@ export default function DonorHeader({ userName = "المتبرع" }: Props) {
           قطرة
           <span className="mx-2">‹</span>
           <strong
-            className="
+            className={`
               font-medium
-              text-[#4b5c63]
-            "
+              ${
+                isNotifications
+                  ? "text-[#ad1e38]"
+                  : "text-[#4b5c63]"
+              }
+            `}
           >
             {getPageTitle(pathname)}
           </strong>
@@ -58,8 +72,8 @@ export default function DonorHeader({ userName = "المتبرع" }: Props) {
             gap-4
           "
         >
-          <button
-            type="button"
+          <Link
+            href="/donor/notifications"
             aria-label="الإشعارات"
             className="
               grid h-10 w-10
@@ -69,10 +83,13 @@ export default function DonorHeader({ userName = "المتبرع" }: Props) {
               border-[#edf0f1]
               bg-white
               text-[#6f7e84]
+              transition
+              hover:border-[#ad1e38]/30
+              hover:text-[#ad1e38]
             "
           >
             <Bell className="h-4 w-4" />
-          </button>
+          </Link>
 
           <div
             className="

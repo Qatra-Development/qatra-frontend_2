@@ -22,6 +22,16 @@ type DashboardIconProps = {
   strokeWidth?: number;
 };
 
+export function DonationCampaignIcon({ className, strokeWidth = 1.8 }: DashboardIconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="9" cy="6.5" r="4" stroke="currentColor" strokeWidth={strokeWidth} />
+      <path d="M2.75 19.5v-2.25A6.25 6.25 0 0 1 9 11h1.25c1.45 0 2.78.5 3.84 1.34" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" />
+      <path d="M19.9 13.15a3.06 3.06 0 0 0-4.33 0l-.57.58-.57-.58a3.06 3.06 0 1 0-4.33 4.33L15 22.25l4.9-4.77a3.06 3.06 0 0 0 0-4.33Z" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function OutlinedPlusIcon({ className }: DashboardIconProps) {
   return (
     <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">

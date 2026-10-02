@@ -41,13 +41,16 @@ function getDashboardPath(
     }
 
     /*
-     * مؤسسة لديها خدمات بنك دم
-     * أو تجمع بين طلب الدم وبنك الدم.
+     * مؤسسة تقدم خدمات بنك الدم فقط.
      */
-    if (
-      serviceScope === "blood_bank_services_only" ||
-      serviceScope === "blood_request_and_blood_bank"
-    ) {
+    if (serviceScope === "blood_bank_services_only") {
+      return "/BloodBankDashboard";
+    }
+
+    /*
+     * مؤسسة تجمع بين طلب الدم وخدمات بنك الدم.
+     */
+    if (serviceScope === "blood_request_and_blood_bank") {
       return "/HospitalDashboard";
     }
 
@@ -89,6 +92,8 @@ export function proxy(request: NextRequest) {
     pathname.startsWith("/dashboard/") ||
     pathname === "/HospitalDashboard" ||
     pathname.startsWith("/HospitalDashboard/") ||
+    pathname === "/BloodBankDashboard" ||
+    pathname.startsWith("/BloodBankDashboard/") ||
     pathname === "/HospitalPath" ||
     pathname.startsWith("/HospitalPath/") ||
     pathname === "/institution" ||
@@ -149,6 +154,17 @@ export function proxy(request: NextRequest) {
     }
 
     /*
+     * Dashboard بنك الدم.
+     */
+    if (
+      (pathname === "/BloodBankDashboard" ||
+        pathname.startsWith("/BloodBankDashboard/")) &&
+      dashboardPath !== "/BloodBankDashboard"
+    ) {
+      return NextResponse.redirect(new URL(dashboardPath, request.url));
+    }
+
+    /*
      * HospitalPath فقط للمؤسسة
      * التي لم يتم اعتمادها بعد.
      */
@@ -168,6 +184,7 @@ export const config = {
     "/dashboard/:path*",
     "/institution/:path*",
     "/HospitalDashboard/:path*",
+    "/BloodBankDashboard/:path*",
     "/HospitalPath/:path*",
     "/donor/:path*",
 

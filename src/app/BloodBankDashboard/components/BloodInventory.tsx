@@ -28,9 +28,9 @@ export default function BloodInventory({ dashboard }: { dashboard: BloodDashboar
               <span className={`mt-[9px] min-h-[17px] whitespace-nowrap text-[11px] leading-[17px] ${
                 critical ? "font-bold text-[#B4233A]" : low ? "font-medium text-[#A97727]" : "text-[#A6AFB4]"
               }`}>{blood.state}</span>
-              <div className="mt-auto h-[4px] overflow-hidden rounded-full bg-[#F0F4F4]" dir="ltr">
+              <div className="mt-auto h-[4px] overflow-hidden rounded-full bg-[#F0F4F4]" dir="rtl">
                 <div
-                  className={`h-full rounded-full ${critical ? "bg-[#C92443]" : low ? "bg-[#F4A62A]" : "bg-[#15996E]"}`}
+                  className={`h-full rounded-full ${critical ? "bg-[#9E1B32]" : low ? "bg-[#F4A62A]" : "bg-[#15996E]"}`}
                   style={{ width: `${blood.percent}%` }}
                 />
               </div>

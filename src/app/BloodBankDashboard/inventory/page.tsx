@@ -186,13 +186,13 @@ export default function HospitalInventoryPage() {
 
         <div className="grid grid-cols-4 gap-x-[5px] gap-y-[9px]">
           {stocks.map(([type, count]) => (
-            <button type="button" key={type} onClick={() => setSelectedStock(type)} aria-pressed={selectedStock === type} className={`relative flex h-[110px] flex-col items-center justify-between border px-[8px] pb-[9px] pt-[9px] text-center transition-colors ${selectedStock === type ? "rounded-[14px] border-[#d66d7e] bg-[#fff7f8] shadow-[0_2px_6px_rgba(158,27,50,0.09)]" : type === "AB+" ? "rounded-[9px] border-[#f1e5cf] bg-white" : "rounded-[9px] border-[#e7eaee] bg-white"}`}>
-              {dashboard && count <= 4 && selectedStock !== type && <span className="absolute right-[5px] top-[5px] rounded bg-[#fff3df] px-[3px] text-[8px] font-bold text-[#a87325]">{count <= 1 ? "حرج" : "منخفض"}</span>}
+            <button type="button" key={type} onClick={() => setSelectedStock(current => current === type ? "" : type)} aria-pressed={selectedStock === type} className={`relative flex h-[110px] flex-col items-center justify-between border px-[8px] pb-[9px] pt-[9px] text-center transition-colors ${selectedStock === type ? "rounded-[14px] border-[#d66d7e] bg-[#fff7f8] shadow-[0_2px_6px_rgba(158,27,50,0.09)]" : type === "AB+" ? "rounded-[9px] border-[#f1e5cf] bg-white" : "rounded-[9px] border-[#e7eaee] bg-white"}`}>
+              {dashboard && count <= 4 && selectedStock !== type && <span className={`absolute right-[5px] top-[5px] rounded px-[4px] text-[8px] font-bold ${count <= 1 ? "bg-[#9e1b32] text-white" : "bg-[#fff3df] text-[#a87325]"}`}>{count <= 1 ? "حرج" : "منخفض"}</span>}
               {selectedStock === type && <span className="absolute right-[9px] top-[9px] rounded-full bg-[#9e1b32] px-[7px] py-[2px] text-[8px] font-bold text-white">محدد</span>}
               <span dir="ltr" className="font-['Tajawal'] text-[13px] font-extrabold leading-[15px] text-[#9e1b32]">{type}</span>
               <strong className="font-sans text-[18px] font-bold leading-[21px] text-[#1e303c]">{stockCount(type, count)}</strong>
               <span className="text-[11px] leading-[15px] text-[#98a5ad]">وحدة متاحة</span>
-              <span className="h-[3px] w-full rounded-full bg-[#eef3f4]"><span className={`block h-full rounded-full ${selectedStock === type ? "w-full bg-[#15966e]" : type === "AB+" ? "w-[32%] bg-[#a6762b]" : "w-[70%] bg-[#15966e]"}`} /></span>
+              <span className="h-[4px] w-full overflow-hidden rounded-full bg-[#F0F4F4]" dir="rtl"><span className={`block h-full rounded-full ${count <= 1 ? "bg-[#9E1B32]" : count <= 4 ? "bg-[#F4A62A]" : "bg-[#15996E]"}`} style={{ width: `${Math.min(100, count / 5 * 100)}%` }} /></span>
             </button>
           ))}
         </div>
@@ -235,7 +235,7 @@ export default function HospitalInventoryPage() {
           {visibleUnits.length === 0 && <p className="py-5 text-center text-[11px] text-[#8a959a]">لا توجد وحدات مطابقة للبحث</p>}
         </div>
       </section>
-      <dialog ref={filterDialogRef} dir="rtl" aria-labelledby="inventory-filter-title" className="fixed left-auto right-0 top-0 m-0 h-[80dvh] max-h-[80dvh] w-[min(260px,100vw)] max-w-none overflow-hidden border-0 border-l border-[#e8ecef] bg-white p-0 text-[#243746] shadow-[-6px_0_20px_rgba(30,36,50,0.08)] backdrop:bg-[#1f2937]/40 backdrop:backdrop-blur-[2px]">
+      <dialog ref={filterDialogRef} dir="rtl" aria-labelledby="inventory-filter-title" className="fixed left-auto right-0 top-0 m-0 h-[100dvh] max-h-[100dvh] w-[min(260px,100vw)] max-w-none overflow-hidden border-0 border-l border-[#e8ecef] bg-white p-0 text-[#243746] shadow-[-6px_0_20px_rgba(30,36,50,0.08)] backdrop:bg-[#1f2937]/40 backdrop:backdrop-blur-[2px]">
         <div className="flex h-full flex-col font-['Tajawal']">
           <header className="flex h-[48px] shrink-0 items-center justify-between px-[16px]">
             <button type="button" onClick={() => filterDialogRef.current?.close()} aria-label="إغلاق الفلاتر" className="text-[22px] leading-none text-[#84929a]">×</button>
@@ -286,9 +286,9 @@ export default function HospitalInventoryPage() {
               <div className="col-start-1 border-b border-[#edf0f2] py-[8px]"><dt className="font-bold">حالة الوحدة</dt><dd className="mt-[4px]"><span className={`rounded-full px-[7px] py-[3px] text-[10px] font-semibold ${statusClasses[selectedUnit.status]}`}>● {selectedUnit.status}</span></dd></div>
             </dl>
             <footer className="mt-auto flex items-center gap-[7px] pt-[10px]">
-              <button type="button" onClick={openEditDialog} disabled={selectedUnit.rawStatus === "reserved" || selectedUnit.rawStatus === "delivered" || busy} className="h-[32px] rounded-[7px] bg-[#9e1b32] px-[13px] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تعديل البيانات</button>
+              {selectedUnit.rawStatus === "available" && <button type="button" onClick={openEditDialog} disabled={busy} className="h-[32px] rounded-[7px] bg-[#9e1b32] px-[13px] text-[12px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.15)]">تعديل البيانات</button>}
               <button type="button" onClick={() => unitDialogRef.current?.close()} className="h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#61717b]">إغلاق</button>
-              <button type="button" onClick={openExcludeDialog} disabled={selectedUnit.rawStatus !== "available" || busy} className="mr-auto h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#9e1b32]">استبعاد الوحدة</button>
+              {selectedUnit.rawStatus === "available" && <button type="button" onClick={openExcludeDialog} disabled={busy} className="mr-auto h-[32px] rounded-[7px] border border-[#e7eaed] px-[12px] text-[12px] font-bold text-[#9e1b32]">استبعاد الوحدة</button>}
             </footer>
           </div>
         )}

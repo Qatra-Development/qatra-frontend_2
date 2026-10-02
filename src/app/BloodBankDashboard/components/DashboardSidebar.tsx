@@ -9,6 +9,7 @@ import {
   Bell,
   ChevronDown,
   CircleHelp,
+  DonationCampaignIcon,
   House,
   InstitutionBuildingIcon,
   LogOut,
@@ -30,12 +31,13 @@ const navigation = [
   { label: "بيانات المؤسسة", href: "/HospitalPath", icon: InstitutionBuildingIcon },
   { label: "الملف الشخصي", href: "#", icon: UserRound },
   { label: "سجل نشاط المؤسسة", href: "#", icon: ActivityChartIcon },
-  { label: "الإشعارات", href: "#", icon: Bell },
+  { label: "الإشعارات", href: "/BloodBankDashboard/notifications", icon: Bell },
 ];
 
 export default function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const donationCampaignsPath = "/BloodBankDashboard/donations/campaigns";
   const voluntaryDonationsPath = "/BloodBankDashboard/donations/voluntary";
   const donationCallsPath = "/BloodBankDashboard/donations/calls";
   const upcomingDonorsPath = "/BloodBankDashboard/donations/upcoming";
@@ -66,7 +68,7 @@ export default function DashboardSidebar() {
         <span className="text-xl font-bold tracking-tight text-slate-800">قطرة</span>
       </Link>
 
-      <nav className="space-y-1.5" aria-label="القائمة الرئيسية">
+      <nav className="min-h-0 flex-1 space-y-1.5 overflow-y-auto overscroll-contain" aria-label="القائمة الرئيسية">
         {navigation.map(({ label, href, icon: Icon, expandable }) => {
           const active = pathname === href;
 
@@ -93,6 +95,17 @@ export default function DashboardSidebar() {
 
                 {donationsOpen && (
                   <div className="space-y-1 pr-3">
+                    <Link
+                      href={donationCampaignsPath}
+                      className={`flex h-10 w-full items-center gap-3 rounded-full px-4 text-xs ${
+                        pathname === donationCampaignsPath
+                          ? "bg-[#fbebef] font-bold text-[#a61f36]"
+                          : "font-medium text-[#b8c1c7] hover:bg-slate-50 hover:text-slate-700"
+                      }`}
+                    >
+                      <DonationCampaignIcon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+                      حملات التبرع
+                    </Link>
                     <Link
                       href={voluntaryDonationsPath}
                       className={`flex h-10 w-full items-center gap-3 rounded-full px-4 text-xs ${
@@ -149,7 +162,7 @@ export default function DashboardSidebar() {
         })}
       </nav>
 
-      <div className="mt-auto space-y-1 border-t border-slate-100 pt-4">
+      <div className="shrink-0 space-y-1 border-t border-slate-100 pt-4">
         <Link href="#" className="flex h-10 w-full items-center gap-3 rounded-full px-4 text-xs font-medium text-[#b8c1c7] hover:bg-slate-50 hover:text-slate-700">
           <CircleHelp className="h-4 w-4 shrink-0" strokeWidth={1.8} />
           المساعدة

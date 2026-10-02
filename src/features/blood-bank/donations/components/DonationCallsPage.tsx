@@ -46,7 +46,9 @@ const TABS: Array<{
   },
 ];
 
-export default function DonationCallsPage() {
+export default function DonationCallsPage({
+  callsHref = "/HospitalDashboard/donations/calls",
+}: { callsHref?: string }) {
   const {
     calls,
 
@@ -389,6 +391,7 @@ export default function DonationCallsPage() {
               <DonationCallCard
                 key={call.id}
                 call={call}
+                callsHref={callsHref}
                 onDetails={() => setDetailsCallId(call.id)}
               />
             ))}
@@ -477,9 +480,11 @@ export default function DonationCallsPage() {
 
 function DonationCallCard({
   call,
+  callsHref,
   onDetails,
 }: {
   call: DonationCall;
+  callsHref: string;
   onDetails: () => void;
 }) {
   return (
@@ -609,7 +614,7 @@ function DonationCallCard({
         "
       >
         <Link
-          href={`/HospitalDashboard/donations/calls/${call.id}/responders`}
+          href={`${callsHref}/${call.id}/responders`}
           className="
     inline-flex h-[38px]
     items-center
@@ -632,7 +637,7 @@ function DonationCallCard({
 
         {call.status === "active" ? (
           <Link
-            href={`/HospitalDashboard/donations/calls/${call.id}/targeting`}
+            href={`${callsHref}/${call.id}/targeting`}
             className="
       inline-flex h-[38px]
       items-center
