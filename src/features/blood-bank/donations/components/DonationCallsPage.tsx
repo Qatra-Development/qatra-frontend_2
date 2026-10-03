@@ -24,9 +24,10 @@ import {
 
 import type { DonationCall } from "../types/donation.types";
 
-import CreateDonationCallModal from "./CreateDonationCallModal";
 import DonationCallDetailsModal from "./DonationCallDetailsModal";
 import Link from "next/link";
+import HospitalCreateDonationCallDialog from "@/src/app/HospitalDashboard/components/CreateDonationCallDialog";
+import BloodBankCreateDonationCallDialog from "@/src/app/BloodBankDashboard/components/CreateDonationCallDialog";
 
 const TABS: Array<{
   value: DonationCallTab;
@@ -73,21 +74,11 @@ export default function DonationCallsPage({
     reload,
   } = useDonationCalls();
 
-  const [createOpen, setCreateOpen] = useState(false);
-
   const [detailsCallId, setDetailsCallId] = useState<number | null>(null);
 
-  const [notice, setNotice] = useState<string | null>(null);
-
-  function handleCreated() {
-    setNotice("تم إنشاء نداء التبرع بنجاح.");
-
-    reload();
-
-    window.setTimeout(() => {
-      setNotice(null);
-    }, 4000);
-  }
+  const CreateDonationCallDialog = callsHref.startsWith("/BloodBankDashboard")
+    ? BloodBankCreateDonationCallDialog
+    : HospitalCreateDonationCallDialog;
 
   return (
     <>
@@ -142,10 +133,9 @@ export default function DonationCallsPage({
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="
+          <CreateDonationCallDialog
+            triggerLabel="إنشاء نداء"
+            triggerClassName="
               flex h-[46px]
               items-center
               justify-center
@@ -161,10 +151,7 @@ export default function DonationCallsPage({
               transition
               hover:bg-[#94182f]
             "
-          >
-            <Plus className="h-4 w-4" />
-            إنشاء نداء
-          </button>
+          />
         </div>
 
         <div
@@ -284,24 +271,6 @@ export default function DonationCallsPage({
             </button>
           ))}
         </div>
-
-        {notice && (
-          <div
-            className="
-              mt-5
-              rounded-xl
-              border
-              border-emerald-100
-              bg-emerald-50
-              px-4 py-3
-              text-xs
-              font-semibold
-              text-emerald-700
-            "
-          >
-            {notice}
-          </div>
-        )}
 
         {error ? (
           <div
@@ -460,13 +429,6 @@ export default function DonationCallsPage({
           </div>
         )}
       </section>
-
-      {createOpen && (
-        <CreateDonationCallModal
-          onClose={() => setCreateOpen(false)}
-          onCreated={handleCreated}
-        />
-      )}
 
       {detailsCallId !== null && (
         <DonationCallDetailsModal

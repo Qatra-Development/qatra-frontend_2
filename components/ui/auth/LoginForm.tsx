@@ -106,7 +106,7 @@ export default function LoginForm() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5" noValidate>
         {/* Identifier */}
         <div>
           <label

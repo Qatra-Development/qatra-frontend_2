@@ -27,6 +27,7 @@ export default function CreateBloodRequestDialog() {
   const [supplierId, setSupplierId] = useState<number | null>(null);
   const [supplierResult, setSupplierResult] = useState<{ key: string; items: BloodSupplier[] }>({ key: "", items: [] });
   const supplierKey = `${bloodType}:${units}`;
+  const suppliersLoading = isOpen && supplierResult.key !== supplierKey;
   const suppliers = (supplierResult.key === supplierKey ? supplierResult.items : []).map((item) => ({
     id: item.id,
     name: item.institution_name,
@@ -43,7 +44,10 @@ export default function CreateBloodRequestDialog() {
       setSupplier("");
       setSupplierId(null);
     }).catch((cause) => {
-      if (!controller.signal.aborted) setError(cause instanceof Error ? cause.message : "تعذر تحميل الجهات الموردة.");
+      if (!controller.signal.aborted) {
+        setSupplierResult({ key: `${bloodType}:${units}`, items: [] });
+        setError(cause instanceof Error ? cause.message : "تعذر تحميل الجهات الموردة.");
+      }
     });
     return () => controller.abort();
   }, [isOpen, bloodType, units]);
@@ -122,7 +126,7 @@ export default function CreateBloodRequestDialog() {
 
   return (
     <>
-      <button type="button" onClick={() => { setError(""); setSupplier(""); setSupplierId(null); setIsOpen(true); dialogRef.current?.showModal(); }} className="flex items-center gap-1.5 rounded-md bg-[#B4233A] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#991F32]">
+      <button type="button" onClick={() => { setError(""); setSupplier(""); setSupplierId(null); setSupplierResult({ key: "", items: [] }); setIsOpen(true); dialogRef.current?.showModal(); }} className="flex items-center gap-1.5 rounded-md bg-[#B4233A] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#991F32]">
         <Plus className="h-4 w-4" strokeWidth={1.8} />
         طلب دم جديد
       </button>
@@ -158,6 +162,8 @@ export default function CreateBloodRequestDialog() {
             {suppliersOpen && (
               <div id="request-suppliers" className="mt-2">
                 <div className="space-y-2" role="radiogroup" aria-label="الجهات الموردة">
+                  {suppliersLoading && <p className="py-2 text-center text-[10px] text-[#74828a]">جارٍ تحميل الجهات الموردة...</p>}
+                  {!suppliersLoading && suppliers.length === 0 && <p className="py-2 text-center text-[10px] text-[#74828a]">لا توجد جهة تستطيع توفير كامل الكمية المطلوبة.</p>}
                   {suppliers.map((item, index) => (
                     <label key={item.id} className={`flex cursor-pointer items-center justify-between gap-3 rounded-[9px] border px-3 py-2 transition ${supplierId === item.id ? "border-[#dd596d] bg-[#fff8f9]" : "border-[#e7ebee] bg-white hover:border-[#d9a4ad]"}`}>
                       <span className="flex min-w-0 items-center gap-3">

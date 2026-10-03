@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
                     قم بادخال البريد الالكتروني لاستعادة كلمة المرور الخاصة بك!
                 </p>
 
-                <form onSubmit={handleSubmit} className="w-full text-right">
+                <form onSubmit={handleSubmit} className="w-full text-right" noValidate>
                     {/* Email Field */}
                     <div className="mb-6">
                         <label htmlFor="recovery-input" className="block text-xs sm:text-sm font-bold text-gray-700 mb-2 mr-1">
