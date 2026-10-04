@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, Heart, MoreHorizontal, X } from "lucide-react";
 import CreateBloodRequestDialog from "../components/CreateBloodRequestDialog";
 import { toast } from "sonner";
-import { BloodRequestApiError, cancelBloodRequest, createBloodRequest, getBloodRequests, getBloodRequestDetails, getBloodSuppliers, updateBloodRequest, submitBloodRequestDraft } from "@/src/features/institution/blood-requests/services/blood-request.service";
+import { BloodRequestApiError, cancelBloodRequest, createBloodRequest, getBloodRequests, getBloodRequestDetails, getBloodSuppliers, receiveBloodRequest, updateBloodRequest, submitBloodRequestDraft } from "@/src/features/institution/blood-requests/services/blood-request.service";
 import type { BloodRequestDetails, BloodRequestFormValues } from "@/src/features/institution/blood-requests/types/blood-request.types";
 import { buildCreatePayload } from "@/src/features/institution/blood-requests/lib/blood-request.utils";
 import { createBloodRequestSchema } from "@/src/features/institution/blood-requests/schemas/blood-request.schema";
@@ -23,17 +23,20 @@ const dateOptions = [
   { value: "today", label: "اليوم" },
 ];
 
-const initialRequests = [
-  { id: "BR-12718066", type: "O+", units: "3/3", urgency: "عادي", status: "مكتمل", needed: "10/9/2026 - 05:30 pm", updated: "الآن" },
-  { id: "BR-65771443", type: "AB-", units: "3/3", urgency: "عاجل", status: "مكتمل", needed: "10/9/2026 - 05:30 pm", updated: "الآن" },
-  { id: "BR-65757260", type: "AB+", units: "0/3", urgency: "طارئ", status: "ملغي", needed: "10/9/2026 - 05:30 pm", updated: "الآن" },
-  { id: "BR-65733930", type: "A+", units: "0/5", urgency: "عاجل", status: "قيد الانتظار", needed: "10/9/2026 - 05:30 pm", updated: "الآن" },
-  { id: "BR-65700011", type: "B+", units: "2/4", urgency: "عاجل", status: "جاهز للتسليم", needed: "09/9/2026 - 10:00 am", updated: "منذ ساعة" },
-  { id: "BR-65699902", type: "O-", units: "1/2", urgency: "عاجل", status: "مرفوض", needed: "08/9/2026 - 02:15 pm", updated: "أمس" },
-  { id: "BR-65680055", type: "A-", units: "3/3", urgency: "عادي", status: "مكتمل", needed: "07/9/2026 - 08:00 am", updated: "منذ يومين" },
-];
-
-type RequestRow = (typeof initialRequests)[number] & { backendId?: number | string; reason?: string; notes?: string; supplier?: string };
+type RequestRow = {
+  id: string;
+  type: string;
+  units: string;
+  urgency: string;
+  status: string;
+  needed: string;
+  updated: string;
+  backendId?: number | string;
+  reason?: string;
+  notes?: string;
+  supplier?: string;
+  canReceive?: boolean;
+};
 
 const statusStyle: Record<string, string> = {
   "مكتمل": "bg-[#f1f8f8] text-[#477f83]",
@@ -68,17 +71,57 @@ export default function MyRequestsPage() {
   const availableEditSuppliers = editingDraft || editingLocalDraft ? draftSuppliers : editSuppliers;
   const [savedRequests, setSavedRequests] = useState<RequestRow[]>([]);
   useEffect(() => {
-    const loadRequests = () => {
+    let cancelled = false;
+
+    const loadRequests = async () => {
       try {
-        const stored = JSON.parse(localStorage.getItem("qatra:hospital:blood-requests") || "[]");
-        setSavedRequests(Array.isArray(stored) ? stored : []);
+        const firstPage = await getBloodRequests({ page: 1, per_page: 100 });
+        const pages = [firstPage];
+
+        for (let page = 2; page <= firstPage.meta.last_page; page += 1) {
+          pages.push(await getBloodRequests({ page, per_page: 100 }));
+        }
+
+        if (cancelled) return;
+
+        const requests = await Promise.all(pages.flatMap((result) => result.items).map(async (request) => {
+          const details = ["ready", "completed"].includes(request.status)
+            ? await getBloodRequestDetails(request.id).catch(() => null)
+            : null;
+          const canReceive = details?.available_actions.receive === true;
+
+          return {
+            id: request.request_number,
+            backendId: request.id,
+            type: request.blood_type,
+            units: `${request.units_provided}/${request.units_required}`,
+            urgency: request.priority_label,
+            status: canReceive ? "جاهز للتسليم" : request.status_label,
+            needed: request.needed_at
+              ? new Date(request.needed_at).toLocaleString("en-GB", { hour12: true }).replace(", ", " - ")
+              : "—",
+            updated: request.updated_at
+              ? new Date(request.updated_at).toLocaleString("ar", { dateStyle: "short", timeStyle: "short" })
+              : "—",
+            reason: request.description,
+            notes: request.notes || "",
+            canReceive,
+          };
+        }));
+
+        if (!cancelled) setSavedRequests(requests);
       } catch {
-        setSavedRequests([]);
+        if (!cancelled) setSavedRequests([]);
       }
     };
-    loadRequests();
-    window.addEventListener("qatra:blood-request-created", loadRequests);
-    return () => window.removeEventListener("qatra:blood-request-created", loadRequests);
+
+    void loadRequests();
+    const refreshRequests = () => { void loadRequests(); };
+    window.addEventListener("qatra:blood-request-created", refreshRequests);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("qatra:blood-request-created", refreshRequests);
+    };
   }, []);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<(typeof statuses)[number]>("الكل");
@@ -93,7 +136,7 @@ export default function MyRequestsPage() {
   const [appliedDate, setAppliedDate] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
-  const visibleRequests = [...savedRequests, ...initialRequests].filter((request) =>
+  const visibleRequests = savedRequests.filter((request) =>
     (status === "الكل" || request.status === status) &&
     (!appliedType || request.type === appliedType) &&
     (!appliedUrgency || request.urgency === appliedUrgency) &&
@@ -194,6 +237,33 @@ export default function MyRequestsPage() {
       toast.success("تم إلغاء الطلب.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "تعذر إلغاء الطلب.");
+    } finally {
+      editPending.current = false;
+      setSavingAction(false);
+    }
+  }
+
+  async function receiveSelectedRequest() {
+    if (!selectedRequest?.backendId || !selectedRequest.canReceive || editPending.current) return;
+    editPending.current = true;
+    setSavingAction(true);
+    try {
+      const received = await receiveBloodRequest(selectedRequest.backendId);
+      const record: RequestRow = {
+        ...selectedRequest,
+        status: received.status_label,
+        units: `${received.units_provided}/${received.units_required}`,
+        updated: "الآن",
+        canReceive: false,
+      };
+      setSavedRequests((items) => items.map((item) => item.id === record.id ? record : item));
+      setSelectedRequest(record);
+      window.dispatchEvent(new Event("hospital:inventory-changed"));
+      window.dispatchEvent(new Event("qatra:blood-request-created"));
+      requestDialogRef.current?.close();
+      toast.success("تم تأكيد استلام وحدات الدم وإضافتها إلى المخزون.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذّر تأكيد استلام وحدات الدم.");
     } finally {
       editPending.current = false;
       setSavingAction(false);
@@ -426,8 +496,8 @@ export default function MyRequestsPage() {
                   <button type="button" onClick={openEditRequest} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529]">تعديل الطلب</button>
                   <button type="button" onClick={() => setIsCancellingRequest(true)} className="h-[33px] rounded-[8px] border border-[#e5e9ec] px-[13px] text-[10px] font-bold text-[#263A44] hover:bg-slate-50">إلغاء الطلب</button>
                 </>
-              ) : ["جاهز للتسليم", "جاهزة للتسليم", "جاهزة للتلسيم"].includes(selectedRequest.status) ? (
-                <button type="button" disabled className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] disabled:opacity-50">تم الاستلام</button>
+              ) : selectedRequest.canReceive ? (
+                <button type="button" disabled={savingAction} onClick={() => void receiveSelectedRequest()} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529] disabled:opacity-50">{savingAction ? "جارٍ الاستلام..." : "تم الاستلام"}</button>
               ) : (
                 <button type="button" onClick={() => requestDialogRef.current?.close()} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529]">إغلاق</button>
               )}

@@ -367,6 +367,18 @@ export async function cancelBloodRequest(
   return response.data;
 }
 
+export async function receiveBloodRequest(requestId: number | string) {
+  const response = await requestJson<ApiResponse<BloodRequestDetails>>(
+    backendProxyUrl(API_ENDPOINTS.institutionBloodRequests.receive(requestId)),
+    {
+      method: "POST",
+      body: JSON.stringify({}),
+    },
+  );
+
+  return response.data;
+}
+
 /*
 |--------------------------------------------------------------------------
 | Submit Draft

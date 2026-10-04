@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Menu, UserRound } from "./icons/HospitalDashboardIcons";
+import { ChevronDown, UserRound } from "./icons/HospitalDashboardIcons";
 
 const dashboardPath = "/HospitalDashboard";
 const pageNames: Record<string, string> = {
@@ -34,15 +34,15 @@ export default function DashboardHeader() {
     .filter((_, index) => !(segments[0] === "donations" && segments[1] === "calls" && index === 2));
 
   return (
-    <header className="bg-[#f7f9fa] px-5 pt-5 lg:px-7 lg:pt-7">
+    <header className="bg-[#f7f9fa] px-5 pr-18 pt-5 sm:pr-20 lg:px-7 lg:pt-7">
       <div className="mx-auto max-w-[1240px]">
         <div className={`flex items-center justify-between ${isNotificationsPage ? "pb-0" : "pb-6"}`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <Link href={dashboardPath} className="flex items-center gap-2 lg:hidden">
+            <Link href={dashboardPath} className="hidden items-center gap-2 sm:flex lg:hidden">
               <Image src="/img/logo.png" alt="قطرة" width={30} height={30} />
               <span className="font-bold">قطرة</span>
             </Link>
-            <nav className="flex min-w-0 items-center gap-2 whitespace-nowrap text-xs text-[#7d898e]" aria-label="مسار الصفحة">
+            <nav className="hidden min-w-0 items-center gap-2 whitespace-nowrap text-xs text-[#7d898e] sm:flex" aria-label="مسار الصفحة">
               <Link href={dashboardPath} className="hover:text-[#9e1b32]">قطرة</Link>
               <span className="text-[#aeb7bb]" aria-hidden="true" dir="ltr">‹</span>
               {crumbs.length === 0
@@ -92,9 +92,6 @@ export default function DashboardHeader() {
               <span className="grid h-8 w-8 place-items-center rounded-full border border-slate-100 bg-[#faecee] text-[#83141f]">
                 <UserRound className="h-4 w-4" />
               </span>
-            </button>
-            <button className="grid h-10 w-10 place-items-center rounded-lg border border-slate-200 text-slate-500 lg:hidden" aria-label="فتح القائمة">
-              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>

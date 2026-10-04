@@ -3,6 +3,7 @@ import AdminTopbar from "@/src/features/admin/shared/components/AdminTopbar";
 import { getCurrentAccountType } from "@/src/lib/auth/server-session";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
+import MobileNavigation from "@/src/components/layout/MobileNavigation";
 
 interface AdminDashboardLayoutProps {
   children: ReactNode;
@@ -28,8 +29,9 @@ export default async function AdminDashboardLayout({
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-[#f7f8fa]">
+    <div dir="rtl" className="min-h-screen overflow-x-hidden bg-[#f7f8fa]">
       <AdminSidebar />
+      <MobileNavigation><AdminSidebar /></MobileNavigation>
 
       <div className="min-h-screen lg:pr-[248px]">
         <AdminTopbar />

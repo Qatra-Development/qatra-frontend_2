@@ -23,6 +23,11 @@ body {
   margin: 0;
   font-family: var(--font-arabic);
   min-height: 100vh;
+  overflow-x: hidden;
+}
+
+html {
+  overflow-x: hidden;
 }
 
 @theme inline {

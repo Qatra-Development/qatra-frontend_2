@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import InstitutionSidebar from "@/src/features/institution/shared/components/InstitutionSidebar";
 import InstitutionTopbar from "@/src/features/institution/shared/components/InstitutionTopbar";
+import MobileNavigation from "@/src/components/layout/MobileNavigation";
 
 export default function InstitutionLayout({
   children,
@@ -12,11 +13,12 @@ export default function InstitutionLayout({
     <div
       dir="rtl"
       className="
-        min-h-screen
+        min-h-screen overflow-x-hidden
         bg-[var(--admin-page-bg)]
       "
     >
       <InstitutionSidebar />
+      <MobileNavigation><InstitutionSidebar /></MobileNavigation>
 
       <div className="min-h-screen lg:pr-[248px]">
         <InstitutionTopbar />

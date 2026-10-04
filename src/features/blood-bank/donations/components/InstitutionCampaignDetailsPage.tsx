@@ -147,6 +147,8 @@ export default function InstitutionCampaignDetailsPage({
   const [submitting, setSubmitting] = useState(false);
   const canEdit = !isInstitution || ["published", "draft"].includes(campaignData.campaign?.status ?? "");
   const canCancel = !isInstitution || ["published", "active", "draft"].includes(campaignData.campaign?.status ?? "");
+  const campaignStatus = campaignData.campaign?.status ?? ({ "قادمة": "published", "جارية": "active", "مكتملة": "completed", "ملغاة": "cancelled" }[campaign.status] ?? "");
+  const hasCampaignActions = ["published", "active"].includes(campaignStatus);
 
   function closeEdit() { if (!pending.current) setEditOpen(false); }
   function closeCancel() { if (!pending.current) setCancelOpen(false); }
@@ -282,7 +284,7 @@ export default function InstitutionCampaignDetailsPage({
         <aside className="lg:col-span-4">
           <section className="rounded-[18px] border border-[#edf0f1] bg-white p-5 text-right shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <h2 className="mb-4 text-base font-extrabold text-[#17413f]">الإجراءات</h2>
-            <div className="space-y-3">
+            {hasCampaignActions ? <div className="space-y-3">
               <button
                 type="button"
                 disabled={!canEdit || submitting || (isInstitution && campaignData.loading)}
@@ -297,7 +299,15 @@ export default function InstitutionCampaignDetailsPage({
               <button type="button" disabled={!canCancel || submitting || (isInstitution && campaignData.loading)} onClick={() => setCancelOpen(true)} className="h-11 w-full rounded-[9px] border border-[#e5d9da] bg-white text-sm font-bold text-[#263940] transition hover:bg-[#faf7f7]">
                 إلغاء الحملة
               </button>
-            </div>
+            </div> : (
+              <p className="rounded-[9px] bg-[#f7f9f9] px-4 py-3 text-center text-sm font-bold text-[#64748b]">
+                {campaignStatus === "completed"
+                  ? "اكتملت هذه الحملة بنجاح"
+                  : campaignStatus === "cancelled"
+                    ? "تم إلغاء هذه الحملة"
+                    : "لا توجد إجراءات متاحة لهذه الحملة"}
+              </p>
+            )}
           </section>
         </aside>
       </div>
