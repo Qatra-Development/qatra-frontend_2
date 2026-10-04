@@ -42,10 +42,10 @@ export default function InstitutionDataStep({ institution }: Props) {
             label: "العنوان التفصيلي",
             value: institution.address || "غير متوفر",
           },
-          {
-            label: "تاريخ التأسيس",
-            value: "غير متوفر",
-          },
+          // {
+          //   label: "تاريخ التأسيس",
+          //   value: "غير متوفر",
+          // },
         ]}
       />
 
@@ -56,22 +56,22 @@ export default function InstitutionDataStep({ institution }: Props) {
             label: "رقم الهاتف",
             value: <bdi dir="ltr">{institution.phone_number}</bdi>,
           },
-          {
-            label: "رقم الفاكس",
-            value: "غير متوفر",
-          },
+          // {
+          //   label: "رقم الفاكس",
+          //   value: "غير متوفر",
+          // },
           {
             label: "البريد الإلكتروني",
             value: <bdi dir="ltr">{institution.email}</bdi>,
           },
-          {
-            label: "الموقع الإلكتروني",
-            value: "غير متوفر",
-          },
-          {
-            label: "العنوان البريدي",
-            value: "غير متوفر",
-          },
+          // {
+          //   label: "الموقع الإلكتروني",
+          //   value: "غير متوفر",
+          // },
+          // {
+          //   label: "العنوان البريدي",
+          //   value: "غير متوفر",
+          // },
         ]}
       />
 
