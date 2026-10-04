@@ -32,7 +32,7 @@ export default function AvailabilityConfirmModal({
       <div
         className="
           w-full
-          max-w-[390px]
+          max-w-[350px]
           rounded-[20px]
           bg-white
           px-7 py-8

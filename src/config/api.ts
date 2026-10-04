@@ -67,6 +67,9 @@ export const API_ENDPOINTS = {
 
     cancel: (requestId: number | string) =>
       `/institution/blood-requests/${requestId}/cancel`,
+
+    receive: (requestId: number | string) =>
+      `/institution/blood-requests/${requestId}/receive`,
   },
 
   bloodBankDonations: {

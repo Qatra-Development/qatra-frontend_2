@@ -28,7 +28,7 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-60 bg-white border-l border-slate-200/80 flex flex-col justify-between py-6 px-4 flex-shrink-0 min-h-full"
+      className="hidden w-60 bg-white border-l border-slate-200/80 flex-col justify-between py-6 px-4 flex-shrink-0 min-h-full lg:flex"
       data-purpose="main-sidebar"
     >
       {/* Top Branding & Navigation */}

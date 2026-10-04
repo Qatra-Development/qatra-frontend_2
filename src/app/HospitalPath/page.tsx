@@ -13,6 +13,19 @@ import {
   formatArabicDate,
 } from "@/src/features/institution/utils/formatters";
 
+const getInstitutionHomePath = (serviceScope?: string) => {
+  switch (serviceScope) {
+    case "blood_request_only":
+      return "/institution/dashboard";
+    case "blood_bank_services_only":
+      return "/BloodBankDashboard";
+    case "blood_request_and_blood_bank":
+      return "/HospitalDashboard";
+    default:
+      return "/HospitalPath";
+  }
+};
+
 const displayValue = (value?: string | null) => value?.trim() || "—";
 
 export default function HospitalPathPage() {
@@ -52,6 +65,16 @@ export default function HospitalPathPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, []);
+
+  const goToInstitutionHome = () => {
+    if (data?.status !== "approved" || !data.service_scope) return;
+
+    // Sync the routing cookies with the latest institution API response before
+    // navigating, otherwise the proxy still sees the old pending status.
+    document.cookie = "institution_status=approved; Path=/; SameSite=Lax";
+    document.cookie = `service_scope=${encodeURIComponent(data.service_scope)}; Path=/; SameSite=Lax`;
+    window.location.assign(getInstitutionHomePath(data.service_scope));
+  };
 
   if (isLoading) {
     return (
@@ -171,7 +194,11 @@ export default function HospitalPathPage() {
   return (
     <>
       {/* Dynamic Status Banner */}
-      <StatusBanner status={data?.status || "needs_completion"} />
+      <StatusBanner
+        status={data?.status || "needs_completion"}
+        actionLabel={data?.status === "approved" ? "الانتقال إلى الصفحة الرئيسية" : undefined}
+        onAction={data?.status === "approved" ? goToInstitutionHome : undefined}
+      />
 
       {/* Main Status & Details Card */}
       <section
@@ -240,7 +267,8 @@ export default function HospitalPathPage() {
               </div>
               <p className="pr-6 text-xs leading-relaxed text-slate-600">
                 {data.status === "needs_completion"
-                  ? "قامت الجهة المختصة بمراجعة طلبك وتبين بأنك بحاجة إلى استكمال بعض البيانات قبل الموافقة على إعادة الطلب."
+                  ? data.review_notes ||
+                    "قامت الجهة المختصة بمراجعة طلبك وتبين بأنك بحاجة إلى استكمال بعض البيانات قبل الموافقة على إعادة الطلب."
                   : data.review_notes ||
                     "الملفات المقدمة لا تستوفي متطلبات الاعتماد. يرجى مراجعة البيانات والمستندات وإعادة تقديم الطلب."}
               </p>

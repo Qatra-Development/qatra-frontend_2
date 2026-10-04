@@ -36,9 +36,10 @@ export default function InstitutionTopbar() {
       className="
         sticky top-0 z-30
         bg-[var(--admin-page-bg)]/90
-        px-4 pt-5 pb-3
+        px-4 pr-18 pt-5 pb-3
         backdrop-blur-md
-        sm:px-6
+        sm:px-6 sm:pr-20
+        lg:pr-6
         xl:px-8
       "
     >
@@ -49,13 +50,14 @@ export default function InstitutionTopbar() {
           max-w-[1500px]
           items-center
           justify-between
-          gap-4
+          min-w-0 gap-2 sm:gap-4
         "
       >
         <div
           className="
-            flex items-center
+            hidden items-center
             gap-2 text-sm
+            sm:flex
           "
         >
           <span className="text-gray-400">قطرة</span>
@@ -81,7 +83,7 @@ export default function InstitutionTopbar() {
           dir="ltr"
           className="
             flex items-center
-            gap-4
+            min-w-0 gap-2 sm:gap-4
           "
         >
           <Link
@@ -109,7 +111,7 @@ export default function InstitutionTopbar() {
             href="/institution/profile"
             className="
               flex
-              min-w-[190px]
+              min-w-0 max-w-[190px]
               items-center
               gap-3
               rounded-full
@@ -117,7 +119,7 @@ export default function InstitutionTopbar() {
               border-[var(--admin-border-soft)]
               bg-white
               py-1.5 pr-2 pl-4
-              shadow-sm
+              shadow-sm sm:min-w-[190px]
             "
           >
             {image ? (

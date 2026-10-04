@@ -138,6 +138,7 @@ export interface BloodRequestAvailableActions {
   edit: boolean;
   submit: boolean;
   cancel: boolean;
+  receive: boolean;
 }
 
 export interface BloodRequestDetails extends BloodRequestListItem {

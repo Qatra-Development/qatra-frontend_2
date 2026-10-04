@@ -39,13 +39,13 @@ export default function Header({
   }, [propUserName, propUserRole]);
   return (
     <header
-      className="flex items-center justify-between pb-6"
+      className="flex min-w-0 items-center justify-between pb-6 pr-14 sm:pr-0"
       data-purpose="top-navigation-bar"
     >
       {/* Breadcrumbs (Right in RTL) */}
       <nav
         aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-xs text-slate-400 font-medium"
+        className="hidden items-center gap-1.5 text-xs text-slate-400 font-medium sm:flex"
       >
         <span className="hover:text-slate-600 cursor-pointer">قطرة</span>
         <span className="text-slate-300">&gt;</span>
@@ -77,7 +77,7 @@ export default function Header({
 
         <span className="hidden h-8 w-px bg-[#e5e9eb] sm:block" />
 
-        <div className="flex items-center bg-white px-3.5 py-1.5 rounded-full shadow-sm border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
+        <div className="hidden items-center bg-white px-3.5 py-1.5 rounded-full shadow-sm border border-slate-200 cursor-pointer hover:border-slate-300 transition-all sm:flex">
           <svg
             className="w-4 h-4 text-slate-400 ml-2"
             fill="none"

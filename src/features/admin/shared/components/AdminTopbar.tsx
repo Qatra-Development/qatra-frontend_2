@@ -40,14 +40,15 @@ export default function AdminTopbar() {
       className="
         sticky top-0 z-30
         bg-[#f7f8fa]/90
-        px-4 pt-5 pb-3
+        px-4 pr-18 pt-5 pb-3
         backdrop-blur-md
-        sm:px-6
+        sm:px-6 sm:pr-20
+        lg:pr-6
         xl:px-8
       "
     >
-      <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4">
-        <div className="flex items-center gap-2 text-sm">
+      <div className="mx-auto flex min-w-0 max-w-[1500px] items-center justify-between gap-2 sm:gap-4">
+        <div className="hidden items-center gap-2 text-sm sm:flex">
           <span className="text-gray-400">قطرة</span>
 
           <ChevronLeft className="h-4 w-4 text-gray-300" />
@@ -57,7 +58,7 @@ export default function AdminTopbar() {
           </span>
         </div>
 
-        <div dir="ltr" className="flex items-center gap-4">
+        <div dir="ltr" className="flex min-w-0 items-center gap-2 sm:gap-4">
           <Link
             href="/dashboard/notifications"
             aria-label="الإشعارات"
@@ -75,11 +76,11 @@ export default function AdminTopbar() {
           <Link
             href="/dashboard/profile"
             className="
-              flex min-w-[190px] items-center gap-3
+              flex min-w-0 max-w-[190px] items-center gap-3
               rounded-full border border-gray-100
               bg-white py-1.5 pr-2 pl-4
               shadow-sm transition
-              hover:shadow-md
+              hover:shadow-md sm:min-w-[190px]
             "
           >
             <div

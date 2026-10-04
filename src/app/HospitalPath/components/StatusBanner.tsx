@@ -5,6 +5,8 @@ export interface StatusBannerProps {
   reviewNotes?: string | null;
   customTitle?: string;
   customDescription?: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 export default function StatusBanner({
@@ -12,6 +14,8 @@ export default function StatusBanner({
   reviewNotes,
   customTitle,
   customDescription,
+  actionLabel,
+  onAction,
 }: StatusBannerProps) {
   const statusInfo = INSTITUTION_STATUS_MAP[status] || {
     title: "طلب اعتماد المؤسسة",
@@ -171,6 +175,16 @@ export default function StatusBanner({
             </div>
           )}
         </div>
+
+        {actionLabel && onAction && (
+          <button
+            type="button"
+            onClick={onAction}
+            className="w-full shrink-0 rounded-xl bg-[#9E1B32] px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#83141f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#9E1B32] focus-visible:ring-offset-2 md:w-auto"
+          >
+            {actionLabel}
+          </button>
+        )}
       </div>
     </section>
   );

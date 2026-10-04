@@ -24,7 +24,7 @@ const navigation = [
   },
 
   {
-    label: "نداءات التبرع",
+    label: "حملات التبرع",
     href: "/donor/calls",
     icon: Megaphone,
   },

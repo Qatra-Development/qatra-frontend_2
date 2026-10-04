@@ -11,7 +11,7 @@ interface Props {
 
 function getPageTitle(pathname: string) {
   if (pathname.startsWith("/donor/calls")) {
-    return "نداءات التبرع";
+    return "حملات التبرع";
   }
 
   if (pathname.startsWith("/donor/history")) {
@@ -32,7 +32,9 @@ export default function DonorHeader({ userName = "المتبرع" }: Props) {
   return (
     <header
       className="
-        px-5 pt-6
+        px-5 pr-18 pt-6
+        sm:pr-20
+        lg:pr-8
         lg:px-8 lg:pt-8
       "
     >
@@ -46,8 +48,9 @@ export default function DonorHeader({ userName = "المتبرع" }: Props) {
       >
         <div
           className="
-            text-xs
+            hidden text-xs
             text-[#849197]
+            sm:block
           "
         >
           قطرة

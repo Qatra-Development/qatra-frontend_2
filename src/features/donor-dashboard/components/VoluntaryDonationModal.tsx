@@ -141,7 +141,7 @@ export default function VoluntaryDonationModal({
         className="
           my-auto
           w-full
-          max-w-[650px]
+          max-w-[560px]
           overflow-hidden
           rounded-[20px]
           bg-white

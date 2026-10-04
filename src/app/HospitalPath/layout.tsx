@@ -1,6 +1,7 @@
 import React from "react";
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import MobileNavigation from "@/src/components/layout/MobileNavigation";
 
 export const metadata = {
   title: "قطرة - طلبات الاعتماد",
@@ -20,6 +21,7 @@ export default function HospitalPathLayout({
       <div className="flex-1 flex w-full max-w-[1500px] mx-auto min-h-screen bg-[#f3f6f7] shadow-xl overflow-hidden border border-slate-200/80">
         {/* الشريط الجانبي */}
         <Sidebar />
+        <MobileNavigation><Sidebar /></MobileNavigation>
 
         {/* مساحة المحتوى الرئيسية مع الشريط العلوي */}
         <main className="flex-1 flex flex-col min-w-0 bg-[#f4f7f7] p-5 lg:p-7 overflow-y-auto">
