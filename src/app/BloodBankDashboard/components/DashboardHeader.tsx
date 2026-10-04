@@ -12,13 +12,16 @@ const pageNames: Record<string, string> = {
   requests: "الطلبات الواردة",
   "my-requests": "طلباتي",
   donations: "إدارة التبرعات",
+  "donations/campaigns": "حملات التبرع",
   "donations/voluntary": "طلبات التبرع الطوعي",
   "donations/calls": "نداءات التبرع",
   "donations/upcoming": "المتبرعون القادمون",
+  notifications: "الإشعارات",
 };
 
 export default function DashboardHeader() {
   const pathname = usePathname();
+  const isNotificationsPage = pathname === `${dashboardPath}/notifications`;
   const segments = pathname.slice(dashboardPath.length).split("/").filter(Boolean);
   const crumbs = segments.map((_, index) => {
     const path = segments.slice(0, index + 1).join("/");
@@ -28,7 +31,7 @@ export default function DashboardHeader() {
   return (
     <header className="bg-[#f7f9fa] px-5 pt-5 lg:px-7 lg:pt-7">
       <div className="mx-auto max-w-[1240px]">
-        <div className="flex items-center justify-between pb-6">
+        <div className={`flex items-center justify-between ${isNotificationsPage ? "pb-0" : "pb-6"}`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <Link href={dashboardPath} className="flex items-center gap-2 lg:hidden">
               <Image src="/img/logo.png" alt="قطرة" width={30} height={30} />
@@ -54,10 +57,10 @@ export default function DashboardHeader() {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
+            <Link
+              href="/BloodBankDashboard/notifications"
               className="relative flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-slate-200 bg-white text-slate-500 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50 hover:text-slate-700"
               aria-label="الإشعارات"
-              type="button"
             >
               <svg
                 className="h-4 w-4"
@@ -73,7 +76,7 @@ export default function DashboardHeader() {
                 />
               </svg>
               <span className="absolute left-1.5 top-1 h-2 w-2 rounded-full bg-[#83141f]" />
-            </button>
+            </Link>
             <span className="hidden h-8 w-px bg-[#e5e9eb] sm:block" />
             <button className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm sm:flex">
               <ChevronDown className="h-4 w-4 text-[#607078]" strokeWidth={1.7} />

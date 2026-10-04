@@ -24,6 +24,8 @@ export default function IncomingRequestsPage() {
         showHeader={false}
         incomingMode
         statusOverride={selectedFilter.status}
+        onReady={() => setActiveFilter("مقبول بانتظار الارسال")}
+        onCompleted={() => setActiveFilter("مكتمل")}
         toolbar={(counts) => (
           <div className="px-5 pt-5">
             <div className="flex flex-wrap items-center justify-center gap-1.5 border-b border-slate-100 pb-4">

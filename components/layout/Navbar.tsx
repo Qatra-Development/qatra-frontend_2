@@ -42,7 +42,7 @@ export default async function Navbar() {
           style={{ fontFamily: "Tajawal, sans-serif" }}
           aria-hidden="true"
         >
-          →
+          ←
         </span>
         <Link
           href="/"

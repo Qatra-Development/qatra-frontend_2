@@ -12,9 +12,10 @@ import type { MatchingDonor } from "../types/donation.types";
 
 interface Props {
   callId: number;
+  callsHref?: string;
 }
 
-export default function MatchingDonorsPage({ callId }: Props) {
+export default function MatchingDonorsPage({ callId, callsHref = "/HospitalDashboard/donations/calls" }: Props) {
   const {
     call,
     donors,
@@ -109,7 +110,7 @@ export default function MatchingDonorsPage({ callId }: Props) {
         </div>
 
         <Link
-          href={`/HospitalDashboard/donations/calls/${callId}/responders`}
+          href={`${callsHref}/${callId}/responders`}
           className="
             inline-flex
             h-[42px]

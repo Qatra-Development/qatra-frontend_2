@@ -1,7 +1,11 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 import { CircleAlert } from "lucide-react";
+import { toast } from "sonner";
+import { createDonationCall } from "@/src/features/blood-bank/donations/services/blood-bank-donation.service";
+import { buildScheduledAt } from "@/src/features/blood-bank/donations/lib/donation.utils";
+import type { BloodType, DonationPriority } from "@/src/features/blood-bank/donations/types/donation.types";
 import { Plus } from "./icons/HospitalDashboardIcons";
 
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
@@ -21,12 +25,65 @@ export default function CreateDonationCallDialog({
 }: CreateDonationCallDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [bloodType, setBloodType] = useState(initialBloodType);
+  const pending = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  function closeDialog() {
+    if (!pending.current) dialogRef.current?.close();
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (pending.current) return;
+
+    const form = event.currentTarget;
+    const fields = new FormData(form);
+    const field = (name: string) => String(fields.get(name) ?? "").trim();
+    const title = field("title");
+    const units = Number(field("units_required"));
+    const priority = field("priority");
+    const neededAt = buildScheduledAt(field("date"), field("time"));
+
+    if (!title || !bloodTypes.includes(bloodType) || !Number.isInteger(units) || units < 1 || !["normal", "urgent", "emergency"].includes(priority)) {
+      setError("يرجى تعبئة عنوان النداء وفصيلة الدم ودرجة الاستعجال وعدد صحيح من الوحدات.");
+      return;
+    }
+    if (!neededAt || new Date(neededAt).getTime() <= Date.now()) {
+      setError("يرجى تحديد تاريخ ووقت صحيحين في المستقبل.");
+      return;
+    }
+
+    pending.current = true;
+    setSubmitting(true);
+    setError("");
+    try {
+      await createDonationCall({
+        title,
+        blood_type: bloodType as BloodType,
+        units_required: units,
+        priority: priority as DonationPriority,
+        needed_at: neededAt,
+        description: field("description"),
+        ...(field("donation_location") ? { donation_location: field("donation_location") } : {}),
+      });
+      dialogRef.current?.close();
+      form.reset();
+      setBloodType(initialBloodType);
+      toast.success("تم إنشاء نداء التبرع بنجاح.");
+    } catch (requestError) {
+      setError(requestError instanceof Error ? requestError.message : "تعذر إنشاء نداء التبرع. يرجى المحاولة مجددًا.");
+    } finally {
+      pending.current = false;
+      setSubmitting(false);
+    }
+  }
 
   return (
     <>
       <button
         type="button"
-        onClick={() => { setBloodType(initialBloodType); onOpen?.(); dialogRef.current?.showModal(); }}
+        onClick={() => { setBloodType(initialBloodType); setError(""); onOpen?.(); dialogRef.current?.showModal(); }}
         className={triggerClassName}
       >
         <Plus className="h-4 w-4" strokeWidth={1.8} />
@@ -37,23 +94,24 @@ export default function CreateDonationCallDialog({
         ref={dialogRef}
         dir="rtl"
         aria-labelledby="create-donation-call-title"
+        onCancel={(event) => { if (pending.current) event.preventDefault(); }}
         onClick={(event) => {
-          if (event.target === dialogRef.current) dialogRef.current.close();
+          if (event.target === dialogRef.current) closeDialog();
         }}
         className="m-auto w-[min(540px,calc(100vw-32px))] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-[14px] border-0 bg-white p-0 font-['Tajawal'] text-[#263A44] shadow-[0_20px_60px_rgba(20,32,42,0.2)] backdrop:bg-[#1F2937]/45"
       >
-        <form className="flex min-h-[475px] flex-col px-3 pb-3 pt-2 sm:min-h-[610px] sm:px-7 sm:pb-5 sm:pt-4" onSubmit={(event) => event.preventDefault()}>
+        <form className="flex min-h-[475px] flex-col px-3 pb-3 pt-2 sm:min-h-[610px] sm:px-7 sm:pb-5 sm:pt-4" onSubmit={handleSubmit} aria-busy={submitting}>
           <header className="-mx-3 flex items-start justify-between border-b border-[#EFF1F2] px-3 pb-3 sm:-mx-7 sm:px-7 sm:pb-4">
             <div>
               <p className="text-[10px] font-bold text-[#B4233A]">نداء جديد</p>
               <h2 id="create-donation-call-title" className="mt-1 text-[14px] font-bold text-[#263A44] sm:text-[18px]">إنشاء نداء تبرع بالدم</h2>
             </div>
-            <button type="button" onClick={() => dialogRef.current?.close()} aria-label="إغلاق النافذة" className="grid h-7 w-7 place-items-center rounded-md text-sm text-[#87939A] hover:bg-slate-100">×</button>
+            <button type="button" onClick={closeDialog} aria-label="إغلاق النافذة" className="grid h-7 w-7 place-items-center rounded-md text-sm text-[#87939A] hover:bg-slate-100">×</button>
           </header>
 
           <section className="mt-3 sm:mt-5">
             <label htmlFor="donation-call-title" className="mb-1.5 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">عنوان نداء التبرع</label>
-            <input id="donation-call-title" type="text" placeholder="مثال: حاجة عاجلة لمتبرعين بفصيلة O+" className="h-7 w-full rounded-[7px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
+            <input id="donation-call-title" name="title" required type="text" placeholder="مثال: حاجة عاجلة لمتبرعين بفصيلة O+" className="h-7 w-full rounded-[7px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
           </section>
 
           <section className="mt-3 sm:mt-5">
@@ -77,7 +135,7 @@ export default function CreateDonationCallDialog({
           <section className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-4">
             <div>
               <label htmlFor="donation-urgency" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">درجة الاستعجال</label>
-              <select id="donation-urgency" defaultValue="" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[11px]">
+              <select id="donation-urgency" name="priority" required defaultValue="" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[11px]">
                 <option value="" disabled>اختر الدرجة</option>
                 <option value="normal">عادي</option>
                 <option value="urgent">عاجل</option>
@@ -86,39 +144,39 @@ export default function CreateDonationCallDialog({
             </div>
             <div>
               <label htmlFor="required-units" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">عدد الوحدات المطلوبة</label>
-              <input id="required-units" type="number" min="1" placeholder="أدخل العدد" lang="en" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-right font-sans text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
+              <input id="required-units" name="units_required" required type="number" min="1" step="1" placeholder="أدخل العدد" lang="en" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-right font-sans text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
             </div>
           </section>
 
           <section className="mt-3 grid grid-cols-2 gap-2 sm:mt-5 sm:gap-4">
             <div>
               <label htmlFor="donation-date" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">تاريخ التبرع</label>
-              <input id="donation-date" type="date" lang="en" dir="ltr" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-2 font-sans text-[9px] text-[#697982] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[10px]" />
+              <input id="donation-date" name="date" required type="date" lang="en" dir="ltr" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-2 font-sans text-[9px] text-[#697982] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[10px]" />
             </div>
             <div>
               <label htmlFor="donation-time" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">وقت التبرع</label>
-              <input id="donation-time" type="time" lang="en" dir="ltr" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-2 font-sans text-[9px] text-[#697982] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[10px]" />
+              <input id="donation-time" name="time" required type="time" lang="en" dir="ltr" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-2 font-sans text-[9px] text-[#697982] outline-none focus:border-[#B4233A] sm:h-10 sm:text-[10px]" />
             </div>
           </section>
 
           <section className="mt-3 sm:mt-5">
             <label htmlFor="donation-location" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">مكان التبرع</label>
-            <input id="donation-location" type="text" placeholder="شارع القدس الرئيسي، رام الله والبيرة" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
+            <input id="donation-location" name="donation_location" type="text" placeholder="شارع القدس الرئيسي، رام الله والبيرة" className="h-7 w-full rounded-[8px] border border-[#E7EAED] bg-white px-3 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:h-10 sm:text-[11px]" />
           </section>
 
           <section className="mt-3 sm:mt-5">
             <label htmlFor="donation-reason" className="mb-2 block text-[9px] font-bold text-[#53636C] sm:text-[11px]">تفاصيل النداء</label>
-            <textarea id="donation-reason" rows={3} placeholder="تعليمات أو معلومات إضافية للمتبرعين" className="w-full resize-none rounded-[8px] border border-[#E7EAED] bg-white px-3 py-2.5 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:text-[11px]" />
+            <textarea id="donation-reason" name="description" rows={3} placeholder="تعليمات أو معلومات إضافية للمتبرعين" className="w-full resize-none rounded-[8px] border border-[#E7EAED] bg-white px-3 py-2.5 text-[9px] text-[#53636C] outline-none placeholder:text-[#B5BDC1] focus:border-[#B4233A] sm:text-[11px]" />
           </section>
 
           <div className="mt-auto flex min-h-[60px] w-full items-center justify-start gap-2 overflow-hidden rounded-[16px] bg-[#F4F9FA] px-3 text-[#80A2A6] sm:px-4">
             <CircleAlert className="h-4 w-4 shrink-0 text-[#3F7379] sm:h-5 sm:w-5" strokeWidth={2} aria-hidden="true" />
-            <p className="min-w-0 whitespace-nowrap text-right text-[clamp(5px,1.8vw,10px)] font-bold leading-none">عندما يقبل المتبرع سيصله موعد ومكان التبرع المحددان هنا. يظهر النداء فقط للفصائل المتوافقة</p>
+            <p role={error ? "alert" : undefined} className="min-w-0 whitespace-nowrap text-right text-[clamp(5px,1.8vw,10px)] font-bold leading-none">{error || "عندما يقبل المتبرع سيصله موعد ومكان التبرع المحددان هنا. يظهر النداء فقط للفصائل المتوافقة"}</p>
           </div>
 
           <footer className="mt-3 flex items-center justify-start gap-2 sm:mt-5">
-            <button type="submit" className="rounded-[8px] bg-[#9E1B32] px-3 py-1.5 text-[9px] font-bold text-white hover:bg-[#831529] sm:px-5 sm:py-2.5 sm:text-[11px]">نشر النداء العاجل</button>
-            <button type="button" onClick={() => dialogRef.current?.close()} className="rounded-[8px] border border-[#E7EAED] bg-white px-3 py-1.5 text-[9px] font-bold text-[#53636C] hover:bg-slate-50 sm:px-5 sm:py-2.5 sm:text-[11px]">إلغاء</button>
+            <button type="submit" disabled={submitting} className="rounded-[8px] bg-[#9E1B32] px-3 py-1.5 text-[9px] font-bold text-white hover:bg-[#831529] sm:px-5 sm:py-2.5 sm:text-[11px]">نشر النداء العاجل</button>
+            <button type="button" onClick={closeDialog} className="rounded-[8px] border border-[#E7EAED] bg-white px-3 py-1.5 text-[9px] font-bold text-[#53636C] hover:bg-slate-50 sm:px-5 sm:py-2.5 sm:text-[11px]">إلغاء</button>
           </footer>
         </form>
       </dialog>

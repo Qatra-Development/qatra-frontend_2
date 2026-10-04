@@ -3,8 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { BadgeCheck, Heart, MoreHorizontal, X } from "lucide-react";
 import CreateBloodRequestDialog from "../components/CreateBloodRequestDialog";
+import { toast } from "sonner";
+import { BloodRequestApiError, cancelBloodRequest, createBloodRequest, getBloodRequests, getBloodRequestDetails, getBloodSuppliers, updateBloodRequest, submitBloodRequestDraft } from "@/src/features/institution/blood-requests/services/blood-request.service";
+import type { BloodRequestDetails, BloodRequestFormValues } from "@/src/features/institution/blood-requests/types/blood-request.types";
+import { buildCreatePayload } from "@/src/features/institution/blood-requests/lib/blood-request.utils";
+import { createBloodRequestSchema } from "@/src/features/institution/blood-requests/schemas/blood-request.schema";
 
-const statuses = ["الكل", "مكتمل", "جاهز للتسليم", "قيد الانتظار", "مسودة", "مرفوض", "ملغي"] as const;
+const statuses = ["الكل", "مكتمل", "جاهز للتسليم", "بانتظار القبول", "قيد الانتظار", "مسودة", "مرفوض", "ملغي"] as const;
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const editSuppliers = [
   { name: "مركز الدم الإقليمي 01", location: "بنك الدم المركزي - رام الله والبيرة - مخيم قلنديا", available: 27 },
@@ -28,10 +33,13 @@ const initialRequests = [
   { id: "BR-65680055", type: "A-", units: "3/3", urgency: "عادي", status: "مكتمل", needed: "07/9/2026 - 08:00 am", updated: "منذ يومين" },
 ];
 
+type RequestRow = (typeof initialRequests)[number] & { backendId?: number | string; reason?: string; notes?: string; supplier?: string };
+
 const statusStyle: Record<string, string> = {
   "مكتمل": "bg-[#f1f8f8] text-[#477f83]",
   "جاهز للتسليم": "bg-[#eef2ff] text-[#4169c7]",
   "قيد الانتظار": "bg-[#fff3d9] text-[#a36b13]",
+  "بانتظار القبول": "bg-[#f3edff] text-[#7c4bb0]",
   "مسودة": "bg-[#f1f3f5] text-[#536475]",
   "مرفوض": "bg-[#fff0f2] text-[#a8203c]",
   "ملغي": "bg-[#f1f3f5] text-[#465767]",
@@ -41,7 +49,7 @@ export default function MyRequestsPage() {
   const filterDialogRef = useRef<HTMLDialogElement>(null);
   const requestDialogRef = useRef<HTMLDialogElement>(null);
   const editRequestDialogRef = useRef<HTMLDialogElement>(null);
-  const [selectedRequest, setSelectedRequest] = useState<(typeof initialRequests)[number] | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<RequestRow | null>(null);
   const [isCancellingRequest, setIsCancellingRequest] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
   const [editBloodType, setEditBloodType] = useState("A+");
@@ -51,7 +59,14 @@ export default function MyRequestsPage() {
   const [editNeededTime, setEditNeededTime] = useState("");
   const [editReason, setEditReason] = useState("");
   const [editSupplier, setEditSupplier] = useState(editSuppliers[0].name);
-  const [savedRequests, setSavedRequests] = useState<typeof initialRequests>([]);
+  const [editingDraft, setEditingDraft] = useState<BloodRequestDetails | null>(null);
+  const [editingLocalDraft, setEditingLocalDraft] = useState(false);
+  const [draftSuppliers, setDraftSuppliers] = useState<{ id: number; name: string; location: string; available: number }[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [savingAction, setSavingAction] = useState(false);
+  const editPending = useRef(false);
+  const availableEditSuppliers = editingDraft || editingLocalDraft ? draftSuppliers : editSuppliers;
+  const [savedRequests, setSavedRequests] = useState<RequestRow[]>([]);
   useEffect(() => {
     const loadRequests = () => {
       try {
@@ -119,15 +134,123 @@ export default function MyRequestsPage() {
     filterDialogRef.current?.close();
   };
 
-  const openRequestDetails = (request: (typeof initialRequests)[number]) => {
+  const openRequestDetails = (request: RequestRow) => {
+    if (editPending.current) return;
     setSelectedRequest(request);
     setIsCancellingRequest(false);
     setCancellationReason("");
     requestDialogRef.current?.showModal();
   };
 
-  const openEditRequest = () => {
+  async function findServerRequest(row: RequestRow) {
+    let backendId = row.backendId;
+    if (backendId === undefined) {
+      let page = 1;
+      let lastPage = 1;
+      do {
+        const result = await getBloodRequests({ status: row.status === "مسودة" ? "draft" : "pending", page });
+        const match = result.items.find((request) => String(request.request_number).trim() === row.id.trim());
+        if (match) { backendId = match.id; break; }
+        lastPage = result.meta.last_page;
+        page += 1;
+      } while (page <= lastPage);
+    }
+    if (backendId === undefined) return null;
+    const request = await getBloodRequestDetails(backendId);
+    if (String(request.request_number).trim() !== row.id.trim()) throw new Error("تعذر مطابقة بيانات الطلب المحدد.");
+    return request;
+  }
+
+  function persistRequest(record: RequestRow, oldId: string) {
+    setSavedRequests((items) => items.map((item) => item.id === oldId ? record : item));
+    setSelectedRequest(record);
+    try {
+      const stored = JSON.parse(localStorage.getItem("qatra:hospital:blood-requests") || "[]");
+      if (Array.isArray(stored)) localStorage.setItem("qatra:hospital:blood-requests", JSON.stringify(stored.map((item) => item.id === oldId ? record : item)));
+    } catch { /* Keep a successful server mutation visible if the cache fails. */ }
+    window.dispatchEvent(new Event("qatra:blood-request-created"));
+  }
+
+  async function cancelSelectedRequest() {
+    if (!selectedRequest || editPending.current || !cancellationReason.trim() || !["مسودة", "بانتظار القبول"].includes(selectedRequest.status)) return;
+    editPending.current = true;
+    setSavingAction(true);
+    try {
+      const request = await findServerRequest(selectedRequest);
+      let record: RequestRow;
+      if (request) {
+        if (!["draft", "pending"].includes(request.status)) throw new Error("حالة الطلب الحالية لا تسمح بإلغائه.");
+        const cancelled = await cancelBloodRequest(request.id, { version: request.version, cancellation_reason: cancellationReason.trim() });
+        if (cancelled.status !== "cancelled") throw new Error("لم يتم تأكيد إلغاء الطلب. يرجى تحديث بياناته.");
+        record = { ...selectedRequest, backendId: cancelled.id, status: "ملغي", updated: "الآن" };
+      } else if (selectedRequest.status === "مسودة" && /^BR-\d{13}$/.test(selectedRequest.id)) {
+        record = { ...selectedRequest, status: "ملغي", updated: "الآن" };
+      } else {
+        throw new Error("الطلب غير موجود ضمن حسابك الحالي.");
+      }
+      persistRequest(record, selectedRequest.id);
+      setIsCancellingRequest(false);
+      setCancellationReason("");
+      toast.success("تم إلغاء الطلب.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "تعذر إلغاء الطلب.");
+    } finally {
+      editPending.current = false;
+      setSavingAction(false);
+    }
+  }
+
+  const openEditRequest = async () => {
     if (!selectedRequest) return;
+    if (editPending.current) return;
+    if (!["مسودة", "بانتظار القبول"].includes(selectedRequest.status)) return;
+    setEditingDraft(null);
+    setEditingLocalDraft(false);
+    if (["مسودة", "بانتظار القبول"].includes(selectedRequest.status)) {
+      editPending.current = true;
+      try {
+        const draft = await findServerRequest(selectedRequest);
+        if (!draft && selectedRequest.status === "مسودة" && /^BR-\d{13}$/.test(selectedRequest.id)) {
+          // The original UI saved timestamp IDs only in the browser. These
+          // drafts must be created on the server when the user submits them.
+          const [datePart = "", timePart = ""] = selectedRequest.needed.split(" - ");
+          const [day, month, year] = datePart.split("/");
+          setEditingLocalDraft(true);
+          setEditBloodType(selectedRequest.type || "A+");
+          setEditUrgency(selectedRequest.urgency || "عادي");
+          setEditUnits(Number(selectedRequest.units.split("/")[1]) || 1);
+          setEditNeededDate(year && month && day ? `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}` : "");
+          const time = timePart.trim().match(/^(\d{1,2}):(\d{2})(?:\s*(am|pm))?$/i);
+          const hour = time ? time[3] ? Number(time[1]) % 12 + (time[3].toLowerCase() === "pm" ? 12 : 0) : Number(time[1]) : 0;
+          setEditNeededTime(time ? `${String(hour).padStart(2, "0")}:${time[2]}` : "");
+          setEditReason(selectedRequest.reason || "");
+          setEditSupplier(selectedRequest.supplier || "");
+          setDraftSuppliers([]);
+          requestDialogRef.current?.close();
+          editRequestDialogRef.current?.showModal();
+          return;
+        }
+        if (!draft) throw new Error("الطلب المحفوظ محلياً غير موجود ضمن طلبات حسابك الحالي.");
+        if (!["draft", "pending"].includes(draft.status)) throw new Error("حالة الطلب الحالية لا تسمح بتعديله.");
+        setEditingDraft(draft);
+        setEditBloodType(draft.blood_type || "A+");
+        setEditUrgency(draft.priority_label || "عادي");
+        setEditUnits(draft.units_required || 1);
+        const date = draft.needed_at ? new Date(draft.needed_at) : null;
+        setEditNeededDate(date ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` : "");
+        setEditNeededTime(date ? `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}` : "");
+        setEditReason(draft.description || "");
+        setDraftSuppliers([]);
+        setEditSupplier(draft.recipients[0]?.institution_name || "");
+        requestDialogRef.current?.close();
+        editRequestDialogRef.current?.showModal();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "تعذر تحميل المسودة.");
+      } finally {
+        editPending.current = false;
+      }
+      return;
+    }
     const [datePart = "", timePart = ""] = selectedRequest.needed.split(" - ");
     const [day, month, year] = datePart.split("/");
     setEditBloodType(selectedRequest.type);
@@ -140,6 +263,72 @@ export default function MyRequestsPage() {
     requestDialogRef.current?.close();
     editRequestDialogRef.current?.showModal();
   };
+
+  useEffect(() => {
+    if (!editingDraft && !editingLocalDraft) return;
+    const controller = new AbortController();
+    getBloodSuppliers(editBloodType, editUnits, controller.signal)
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        setDraftSuppliers(result.items.map((item) => ({ id: item.id, name: item.institution_name, location: [item.governorate, item.address].filter(Boolean).join(" - "), available: item.available_units })));
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) toast.error(error instanceof Error ? error.message : "تعذر تحميل الجهات الموردة.");
+      });
+    return () => controller.abort();
+  }, [editingDraft, editingLocalDraft, editBloodType, editUnits]);
+
+  async function saveEditedRequest() {
+    if (!editingDraft && !editingLocalDraft) {
+      editRequestDialogRef.current?.close();
+      return;
+    }
+    if (editPending.current || !selectedRequest) return;
+    const supplier = draftSuppliers.find((item) => item.name === editSupplier);
+    const form: BloodRequestFormValues = {
+      blood_type: editBloodType as BloodRequestFormValues["blood_type"], units_required: String(editUnits),
+      priority: editUrgency === "طارئ" ? "emergency" : editUrgency === "عاجل" ? "urgent" : "normal",
+      needed_date: editNeededDate, needed_time: editNeededTime, description: editReason,
+      notes: editingDraft?.notes || selectedRequest.notes || "", recipient_ids: supplier ? [supplier.id] : [],
+    };
+    const validation = createBloodRequestSchema.safeParse(form);
+    if (!validation.success) {
+      toast.error(validation.error.issues[0]?.message || "يرجى التحقق من بيانات الطلب.");
+      return;
+    }
+    editPending.current = true;
+    setSavingEdit(true);
+    try {
+      let submitted: BloodRequestDetails;
+      if (editingDraft) {
+        const updated = await updateBloodRequest(editingDraft.id, { ...buildCreatePayload(form), version: editingDraft.version });
+        setEditingDraft(updated);
+        submitted = editingDraft.status === "draft" ? await submitBloodRequestDraft(updated.id, { version: updated.version }) : updated;
+      } else {
+        submitted = (await createBloodRequest(buildCreatePayload(form))).request;
+      }
+      const record = {
+        ...selectedRequest, id: submitted.request_number, backendId: submitted.id, status: submitted.status_label,
+        type: submitted.blood_type, units: `${submitted.units_provided}/${submitted.units_required}`,
+        urgency: submitted.priority_label,
+        needed: submitted.needed_at ? new Date(submitted.needed_at).toLocaleString("en-GB", { hour12: true }).replace(", ", " - ") : "—",
+        updated: "الآن", reason: submitted.description, notes: submitted.notes || "", supplier: editSupplier,
+      };
+      persistRequest(record, selectedRequest.id);
+      editRequestDialogRef.current?.close();
+      setEditingDraft(null);
+      setEditingLocalDraft(false);
+      toast.success("تم تعديل الطلب وإرساله للقبول.");
+    } catch (error) {
+      const message = error instanceof BloodRequestApiError && error.fieldErrors
+        ? Object.values(error.fieldErrors).flat()[0] || error.message
+        : error instanceof Error ? error.message : "تعذر تعديل الطلب.";
+      toast.error(message);
+    } finally {
+      editPending.current = false;
+      setSavingEdit(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-[1240px] pt-[4px] font-['Tajawal']">
@@ -174,13 +363,13 @@ export default function MyRequestsPage() {
               <th className="w-[12%] px-[8px] py-[10px]">آخر تحديث</th>
               <th className="w-[10%] rounded-l-[9px] px-[8px] py-[10px]" aria-label="الإجراءات" />
             </tr></thead>
-            <tbody>{visibleRequests.map((request) => <tr key={request.id} onClick={() => openRequestDetails(request)} className="h-[39px] cursor-pointer">
-              <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[9px] font-bold text-[#9e1b32]">{request.id}</td>
+            <tbody className="text-[13px]">{visibleRequests.map((request) => <tr key={request.id} onClick={() => openRequestDetails(request)} className="h-[39px] cursor-pointer">
+              <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[12px] font-bold text-[#9e1b32]">{request.id}</td>
               <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans font-bold text-[#263746]">{request.type}</td>
               <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans">{request.units}</td>
               <td className={`border-b border-[#f1f3f4] px-[8px] ${request.urgency === "طارئ" ? "font-bold text-[#ae2440]" : ""}`}>{request.urgency}</td>
-              <td className="border-b border-[#f1f3f4] px-[8px]"><span className={`inline-flex items-center gap-[4px] whitespace-nowrap rounded-full px-[7px] py-[4px] text-[9px] font-bold ${statusStyle[request.status]}`}><span className="h-[4px] w-[4px] rounded-full bg-current" />{request.status}</span></td>
-              <td dir="ltr" className="whitespace-nowrap border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[9px]">{request.needed}</td>
+              <td className="border-b border-[#f1f3f4] px-[8px]"><span className={`inline-flex items-center gap-[4px] whitespace-nowrap rounded-full px-[7px] py-[4px] text-[12px] font-bold ${statusStyle[request.status]}`}><span className="h-[4px] w-[4px] rounded-full bg-current" />{request.status}</span></td>
+              <td dir="ltr" className="whitespace-nowrap border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[12px]">{request.needed}</td>
               <td className="border-b border-[#f1f3f4] px-[8px]">{request.updated}</td>
               <td className="border-b border-[#f1f3f4] px-[8px]"><button type="button" onClick={(event) => { event.stopPropagation(); openRequestDetails(request); }} aria-label={`خيارات الطلب ${request.id}`} className="rounded p-1 text-[#263746] hover:bg-[#f3f6f7]"><MoreHorizontal className="h-[14px] w-[14px]" /></button></td>
             </tr>)}</tbody>
@@ -227,16 +416,20 @@ export default function MyRequestsPage() {
             )}
 
             <footer className="mt-auto flex gap-2 pt-4">
-              {isCancellingRequest ? (
+              {["مسودة", "بانتظار القبول"].includes(selectedRequest.status) ? isCancellingRequest ? (
                 <>
-                  <button type="button" onClick={openEditRequest} className="h-[33px] rounded-[8px] border border-[#e5e9ec] px-[13px] text-[10px] font-bold text-[#263A44] hover:bg-slate-50">تعديل الطلب</button>
-                  <button type="button" disabled={!cancellationReason.trim()} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529] disabled:cursor-not-allowed disabled:opacity-50">إلغاء الطلب</button>
+                  <button type="button" disabled={savingAction} onClick={openEditRequest} className="h-[33px] rounded-[8px] border border-[#e5e9ec] px-[13px] text-[10px] font-bold text-[#263A44] hover:bg-slate-50">تعديل الطلب</button>
+                  <button type="button" onClick={() => void cancelSelectedRequest()} disabled={savingAction || !cancellationReason.trim()} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529] disabled:cursor-not-allowed disabled:opacity-50">إلغاء الطلب</button>
                 </>
               ) : (
                 <>
                   <button type="button" onClick={openEditRequest} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529]">تعديل الطلب</button>
                   <button type="button" onClick={() => setIsCancellingRequest(true)} className="h-[33px] rounded-[8px] border border-[#e5e9ec] px-[13px] text-[10px] font-bold text-[#263A44] hover:bg-slate-50">إلغاء الطلب</button>
                 </>
+              ) : ["جاهز للتسليم", "جاهزة للتسليم", "جاهزة للتلسيم"].includes(selectedRequest.status) ? (
+                <button type="button" disabled className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] disabled:opacity-50">تم الاستلام</button>
+              ) : (
+                <button type="button" onClick={() => requestDialogRef.current?.close()} className="h-[33px] rounded-[8px] bg-[#9E1B32] px-[16px] text-[10px] font-bold text-white shadow-[0_3px_7px_rgba(158,27,50,0.16)] hover:bg-[#831529]">إغلاق</button>
               )}
             </footer>
           </div>
@@ -260,9 +453,9 @@ export default function MyRequestsPage() {
 
           <div className="mt-3"><label htmlFor="edit-request-reason" className="mb-1 block text-[11px] font-bold">سبب الطلب</label><textarea id="edit-request-reason" rows={2} value={editReason} onChange={(event) => setEditReason(event.target.value)} placeholder="مثال: حالة طارئة في غرفة العمليات" className="w-full resize-none rounded-[7px] border border-[#e7ebee] px-3 py-2 text-[11px] outline-none placeholder:text-[#aab5bb] focus:border-[#9e1b32]" /></div>
 
-          <fieldset className="mt-3"><legend className="text-[11px] font-bold">اختر الجهة الموردة</legend><p className="mb-2 mt-1 text-[9px] text-[#9aa6ad]">اختر جهة الدم المحلية الأقرب لك التي لديها تغطية كافية ومتاحة.</p><div className="space-y-2">{editSuppliers.map((item, index) => <label key={item.name} className={`flex cursor-pointer items-center justify-between gap-3 rounded-[9px] border px-3 py-2 ${editSupplier === item.name ? "border-[#dd596d] bg-[#fff8f9]" : "border-[#e7ebee] bg-white"}`}><span className="flex min-w-0 items-center gap-3"><input type="radio" name="edit-request-supplier" checked={editSupplier === item.name} onChange={() => setEditSupplier(item.name)} className="h-3 w-3 accent-[#9e1b32]" /><span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold ${editSupplier === item.name ? "bg-[#9e1b32] text-white" : "bg-[#f2f4f6] text-[#74828a]"}`}>{index + 1}</span><span className="min-w-0"><strong className="block truncate text-[11px]">{item.name}</strong><span className="block truncate text-[8px] text-[#98a5ac]">{item.location}</span></span></span><span className="shrink-0 text-center"><strong dir="ltr" className="block font-sans text-[12px] text-[#16845d]">{item.available}</strong><span className="text-[8px] text-[#98a5ac]">وحدة متاحة</span></span></label>)}</div></fieldset>
+          <fieldset className="mt-3"><legend className="text-[11px] font-bold">اختر الجهة الموردة</legend><p className="mb-2 mt-1 text-[9px] text-[#9aa6ad]">اختر جهة الدم المحلية الأقرب لك التي لديها تغطية كافية ومتاحة.</p><div className="space-y-2">{availableEditSuppliers.map((item, index) => <label key={item.name} className={`flex cursor-pointer items-center justify-between gap-3 rounded-[9px] border px-3 py-2 ${editSupplier === item.name ? "border-[#dd596d] bg-[#fff8f9]" : "border-[#e7ebee] bg-white"}`}><span className="flex min-w-0 items-center gap-3"><input type="radio" name="edit-request-supplier" checked={editSupplier === item.name} onChange={() => setEditSupplier(item.name)} className="h-3 w-3 accent-[#9e1b32]" /><span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold ${editSupplier === item.name ? "bg-[#9e1b32] text-white" : "bg-[#f2f4f6] text-[#74828a]"}`}>{index + 1}</span><span className="min-w-0"><strong className="block truncate text-[11px]">{item.name}</strong><span className="block truncate text-[8px] text-[#98a5ac]">{item.location}</span></span></span><span className="shrink-0 text-center"><strong dir="ltr" className="block font-sans text-[12px] text-[#16845d]">{item.available}</strong><span className="text-[8px] text-[#98a5ac]">وحدة متاحة</span></span></label>)}</div></fieldset>
 
-          <footer className="mt-4 flex gap-2 border-t border-[#f5f6f7] pt-4"><button type="button" onClick={() => editRequestDialogRef.current?.close()} className="rounded-[8px] bg-[#9e1b32] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#831529]">تعديل الطلب</button><button type="button" onClick={() => editRequestDialogRef.current?.close()} className="rounded-[8px] border border-[#e7ebee] px-4 py-2 text-[11px] font-bold text-[#536475] hover:bg-[#f7f9fa]">إلغاء التعديل</button></footer>
+          <footer className="mt-4 flex gap-2 border-t border-[#f5f6f7] pt-4"><button type="button" onClick={() => void saveEditedRequest()} disabled={savingEdit} className="rounded-[8px] bg-[#9e1b32] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#831529]">تعديل الطلب</button><button type="button" onClick={() => editRequestDialogRef.current?.close()} className="rounded-[8px] border border-[#e7ebee] px-4 py-2 text-[11px] font-bold text-[#536475] hover:bg-[#f7f9fa]">إلغاء التعديل</button></footer>
         </div>
       </dialog>
       <dialog ref={filterDialogRef} dir="rtl" aria-labelledby="my-requests-filters-title" className="fixed inset-y-0 left-auto right-0 m-0 h-dvh max-h-none w-[min(320px,100vw)] max-w-none border-0 bg-white p-0 text-[#263746] shadow-[-8px_0_30px_rgba(20,32,42,0.12)] backdrop:bg-[#253040]/55">

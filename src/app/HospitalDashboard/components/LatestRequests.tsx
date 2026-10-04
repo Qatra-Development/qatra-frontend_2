@@ -8,7 +8,7 @@ import { bankApi, bankListAll, type BloodRequest, type BloodUnit } from "../lib/
 
 type RequestRow = {
   backendId: number; id: string; hospital: string; createdBy: string; type: string; units: number;
-  urgency: string; status: string; date: string; raw: BloodRequest;
+  urgency: string; status: string; date: string; raw: BloodRequest & { created_at?: string | null };
 };
 const asRow = (request: BloodRequest): RequestRow => ({
   backendId: request.id,
@@ -24,6 +24,15 @@ const asRow = (request: BloodRequest): RequestRow => ({
 });
 
 type RequestStatus = "pending" | "waiting" | "completed";
+const incomingStatuses = ["pending", "accepted", "preparing", "ready", "completed"];
+
+function formatNeededDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  const datePart = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Asia/Jerusalem" }).format(date);
+  const timePart = new Intl.DateTimeFormat("en-US", { hour: "2-digit", minute: "2-digit", hour12: true, timeZone: "Asia/Jerusalem" }).format(date).toLowerCase();
+  return datePart + " - " + timePart;
+}
 const statusLabels: Record<RequestStatus, string> = {
   pending: "قيد الاستجابة",
   waiting: "مقبول بانتظار الإرسال",
@@ -52,7 +61,7 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
   const load = async () => {
     try {
       const all = await bankListAll<BloodRequest>("/requests?sort=newest");
-      setRequests(all.filter(request => ["pending", "accepted", "preparing", "ready", "completed"].includes(request.status)).map(asRow));
+      setRequests(all.map(asRow));
       setError("");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذّر تحميل الطلبات."); }
   };
@@ -91,16 +100,24 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
       request.raw.status === "ready" ? "waiting" : "pending";
   const selectedStatus = selectedRequest ? getStatus(selectedRequest) : "pending";
   const waitingForSending = selectedStatus === "waiting";
-  const completed = selectedStatus === "completed";
-  const canOpenDetails = incomingMode;
+  const completed = selectedStatus === "completed" || ["cancelled", "rejected"].includes(selectedRequest?.raw.status ?? "");
+  const canOpenDetails = true;
   const filteredRequests = incomingMode
-    ? requests.filter((request) => statusLabels[getStatus(request)] === statusOverride)
-    : [...requests].sort((a, b) => new Date(b.raw.needed_at).getTime() - new Date(a.raw.needed_at).getTime()).slice(0, 2);
+    ? requests.filter((request) => incomingStatuses.includes(request.status) && statusLabels[getStatus(request)] === statusOverride)
+    : requests.filter((request) => incomingStatuses.includes(request.status))
+      .sort((a, b) => {
+        const firstCreated = Date.parse(a.raw.created_at ?? "");
+        const secondCreated = Date.parse(b.raw.created_at ?? "");
+        if (!Number.isFinite(firstCreated)) return Number.isFinite(secondCreated) ? 1 : 0;
+        if (!Number.isFinite(secondCreated)) return -1;
+        return secondCreated - firstCreated;
+      }).slice(0, 5);
   const counts = requests.reduce<Record<RequestStatus, number>>((result, request) => {
-    result[getStatus(request)] += 1;
+    if (incomingStatuses.includes(request.status)) result[getStatus(request)] += 1;
     return result;
   }, { pending: 0, waiting: 0, completed: 0 });
-  const selectableUnits = availableUnits;
+  const selectableUnits = availableUnits.filter((unit) =>
+    unit.blood_type === selectedRequest?.type && unit.status === "available");
 
   const openDetails = async (request: RequestRow) => {
     setSelectedRequest(request);
@@ -116,6 +133,8 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
     try {
       const all = await bankListAll<BloodUnit>(`/requests/${request.id}/eligible-units`);
       setAvailableUnits(all);
+      const detailsHeight = dialogRef.current?.getBoundingClientRect().height;
+      unitsDialogRef.current?.style.setProperty("--request-dialog-height", `${detailsHeight || 392}px`);
       dialogRef.current?.close();
       unitsDialogRef.current?.showModal();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "تعذّر تحميل الوحدات المؤهلة."); }
@@ -135,6 +154,10 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
       detail = accepted;
     }
     if (detail.available_actions?.mark_ready) {
+      if (detail.units_reserved !== detail.units_required) {
+        setError("لا يمكن تجهيز الطلب قبل حجز جميع الوحدات المطلوبة.");
+        return;
+      }
       const ready = await perform("mark-ready");
       if (ready?.status === "ready") { dialogRef.current?.close(); onReady?.(); }
       return;
@@ -152,6 +175,10 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
     if (!selectedRequest || busy || selectedUnits.length !== selectedRequest.units - selectedRequest.raw.units_reserved) return;
     const reserved = await perform("reserve-units", { unit_ids: selectedUnits });
     if (!reserved) return;
+    if (reserved.units_reserved !== reserved.units_required) {
+      setError("عدد الوحدات المحجوزة لا يطابق عدد الوحدات المطلوبة. يرجى التحقق من الحجز.");
+      return;
+    }
     const ready = reserved.available_actions?.mark_ready ? await perform("mark-ready") : reserved;
     if (!ready) return;
     unitsDialogRef.current?.close();
@@ -164,15 +191,15 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
     <section className={`${showHeader ? "mt-5" : ""} overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-[0_5px_20px_rgba(28,50,58,0.035)]`}>
       {showHeader && (
         <div className="px-5 py-4">
-          <h2 className="text-sm font-bold text-slate-700">أحدث الطلبات والتبرعات</h2>
-          <p className="mt-1 text-[10px] text-slate-400">آخر العمليات المسجلة في النظام</p>
+          <h2 className="text-sm font-bold text-slate-700">آخر الطلبات الواردة</h2>
+          <p className="mt-1 text-[10px] text-slate-400">آخر طلبات الدم الواردة من المؤسسات</p>
         </div>
       )}
       {typeof toolbar === "function" ? toolbar(counts) : toolbar}
 
       <div className="overflow-x-auto px-5 pb-5">
         <table className="w-full min-w-[900px] border-separate border-spacing-0 text-right text-[10px]">
-          <thead className={`bg-[#eaf2f1] ${incomingMode ? "text-[#172A3A]" : "text-[#53646b]"}`}>
+          <thead className={incomingMode ? "bg-[#eaf2f1] text-[#172A3A]" : "bg-[#f3f7f7] text-[#53646b]"}>
             <tr>
               <th className="rounded-r-lg px-4 py-3 font-extrabold">{incomingMode ? "المرجع" : "رقم الطلب"}</th>
               <th className="px-4 py-3 font-extrabold">المؤسسة</th>
@@ -181,16 +208,13 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
               <th className="px-4 py-3 text-center font-extrabold">التغطية</th>
               <th className="px-4 py-3 font-extrabold">الاستعجال</th>
               <th className="px-4 py-3 font-extrabold">الحالة</th>
-              <th className="px-4 py-3 font-extrabold">{incomingMode ? "تاريخ الحاجة" : "آخر تحديث"}</th>
+              <th className="px-4 py-3 font-extrabold">تاريخ الحاجة</th>
               <th className="w-12 rounded-l-lg px-3 py-3" aria-label="الإجراءات" />
             </tr>
           </thead>
           <tbody>
             {filteredRequests.map((request) => {
-              const displayedStatus = incomingMode ? statusLabels[getStatus(request)] : ({
-                pending: "قيد الاستجابة", accepted: "مقبول", preparing: "قيد التجهيز",
-                ready: "جاهز", completed: "مكتمل", rejected: "مرفوض", cancelled: "ملغي",
-              } as Record<string, string>)[request.status] ?? request.status;
+              const displayedStatus = statusLabels[getStatus(request)];
               const waiting = displayedStatus === "قيد الاستجابة" || displayedStatus === "مقبول بانتظار الإرسال";
 
               return (
@@ -206,16 +230,16 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
                 role={canOpenDetails ? "button" : undefined}
                 tabIndex={canOpenDetails ? 0 : undefined}
                 aria-label={canOpenDetails ? `عرض تفاصيل الطلب ${request.id}` : undefined}
-                className={`text-[#536168] transition hover:bg-slate-50/70 ${canOpenDetails ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-[#9E1B32]" : ""}`}
+                className={`text-[#536168] transition hover:bg-slate-50/70 ${incomingMode ? "" : "[&_td]:border-dashed"} ${canOpenDetails ? "cursor-pointer focus-visible:outline-2 focus-visible:outline-[#9E1B32]" : ""}`}
               >
                 <td className="border-b border-slate-100 px-4 py-3 font-bold text-[#a61f36]" dir="ltr">{request.id}</td>
                 <td className="border-b border-slate-100 px-4 py-3 font-medium text-[#4e5e65]">{request.hospital}</td>
                 <td className="border-b border-slate-100 px-4 py-3 text-[#65747a]">{request.createdBy}</td>
                 <td className="border-b border-slate-100 px-4 py-3 text-center font-extrabold text-[#22343c]" dir="ltr">{request.type}</td>
-                <td className="border-b border-slate-100 px-4 py-3 text-center text-[#35464d]">{request.units}</td>
+                <td className="border-b border-slate-100 px-4 py-3 text-center text-[#35464d]" dir="ltr">{incomingMode ? request.units : `${request.raw.status === "completed" ? request.raw.units_provided : request.raw.units_reserved}/${request.units}`}</td>
                 <td className="border-b border-slate-100 px-4 py-3">
                   {request.urgency === "طارئ" ? (
-                    <span className="flex h-4 w-8 flex-none items-center text-right font-['Tajawal'] text-[13.1px] font-extrabold leading-4 text-[#9E1B32]">
+                    <span className={`flex h-4 w-8 flex-none items-center text-right font-['Tajawal'] font-extrabold leading-4 text-[#9E1B32] ${incomingMode ? "text-[13.1px]" : "text-[10px]"}`}>
                       طارئ
                     </span>
                   ) : (
@@ -238,7 +262,7 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
                           : "bg-[#aab3b7]"
                     }`} />
                     {displayedStatus === "مكتمل" ? (
-                      <span className="flex h-[13px] w-[34px] flex-none items-center text-right font-['Tajawal'] text-[11.2px] font-bold leading-[13px] text-[#138A62]">
+                      <span className={`flex h-[13px] w-[34px] flex-none items-center text-right font-['Tajawal'] font-bold leading-[13px] text-[#138A62] ${incomingMode ? "text-[11.2px]" : "text-[9px]"}`}>
                         مكتمل
                       </span>
                     ) : (
@@ -248,9 +272,9 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
                 </td>
                 <td
                   className={`whitespace-nowrap border-b border-slate-100 px-4 py-3 text-[#65747a] ${incomingMode ? "text-right text-[12px]" : "text-[9px]"}`}
-                  dir={incomingMode ? "ltr" : undefined}
+                  dir="ltr"
                 >
-                  {request.date}
+                  {incomingMode ? request.date : formatNeededDate(request.raw.needed_at)}
                 </td>
                 <td className="border-b border-slate-100 px-3 py-3 text-center">
                   <button type="button" onClick={canOpenDetails ? (event) => { event.stopPropagation(); openDetails(request); } : undefined} className="rounded p-1 text-slate-500 transition hover:bg-slate-100" aria-label={`خيارات الطلب ${request.id}`}>
@@ -261,7 +285,7 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
               );
             })}
             {filteredRequests.length === 0 && (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-xs text-[#84929a]">لا توجد طلبات في هذه الحالة</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-xs text-[#84929a]">{incomingMode ? "لا توجد طلبات في هذه الحالة" : "لا توجد طلبات واردة"}</td></tr>
             )}
           </tbody>
         </table>
@@ -322,28 +346,28 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
       dir="rtl"
       aria-labelledby="select-units-title"
       onClick={(event) => { if (event.target === unitsDialogRef.current) unitsDialogRef.current.close(); }}
-      className="m-auto w-[min(433px,calc(100vw-14px))] max-h-[calc(100dvh-14px)] overflow-y-auto rounded-[13px] border-0 bg-white p-0 font-['Tajawal'] text-[#263A44] shadow-[0_20px_60px_rgba(20,32,42,0.2)] backdrop:bg-[#1F2937]/55"
+      className="m-auto w-[min(405px,100vw)] max-h-[100dvh] overflow-hidden rounded-[12px] border-0 bg-white p-0 font-['Tajawal'] text-[#263A44] shadow-[0_20px_60px_rgba(20,32,42,0.2)] backdrop:bg-[#1F2937]/55"
     >
       {selectedRequest && (
-        <div className="flex min-h-[452px] flex-col px-[17px] pb-[18px] pt-[24px]">
-          <header className="-mx-[17px] flex items-start justify-between border-b border-[#eceff1] px-[17px] pb-[17px]">
-            <div>
+        <div className="flex h-[min(var(--request-dialog-height,392px),100dvh)] min-h-0 flex-col px-[15px] pb-[18px] pt-[14px]">
+          <header className="-mx-[15px] flex shrink-0 items-start justify-between gap-2 border-b border-[#eceff1] px-[15px] pb-[14px]">
+            <div className="min-w-0">
               <span className="flex h-[15px] w-[47px] shrink-0 flex-row items-start justify-end p-0 text-[10px] font-bold text-[#9E1B32]">طلب الدم</span>
-              <h2 id="select-units-title" className="mt-0.5 whitespace-nowrap font-['Tajawal'] text-[18px] font-extrabold leading-[25px] text-[#243746]">اختيار وحجز الوحدات للطلب <span dir="ltr" className="inline-block font-sans text-[16px] font-bold">{selectedRequest.id}</span></h2>
+              <h2 id="select-units-title" className="mt-0.5 break-words font-['Tajawal'] text-[18px] font-extrabold leading-[25px] text-[#243746]">اختيار وحجز الوحدات للطلب <span dir="ltr" className="inline-block max-w-full break-all font-sans text-[16px] font-bold">{selectedRequest.id}</span></h2>
               <p className="mt-0.5 text-[9px] text-[#9aa5aa]">تاريخ الحاجة: {selectedRequest.date}</p>
             </div>
-            <button type="button" onClick={() => unitsDialogRef.current?.close()} aria-label="إغلاق اختيار الوحدات" className="grid h-6 w-6 place-items-center rounded text-[13px] hover:bg-slate-100">×</button>
+            <button type="button" onClick={() => unitsDialogRef.current?.close()} aria-label="إغلاق اختيار الوحدات" className="grid h-6 w-6 shrink-0 place-items-center rounded text-[13px] hover:bg-slate-100">×</button>
           </header>
 
-          <p className="mt-[18px] whitespace-nowrap text-right font-['Tajawal'] text-[9px] font-normal text-[#85939b]">حدد {selectedRequest.units - selectedRequest.raw.units_reserved} وحدات متوافقة، الوحدة المحجوزة لن تكون متاحة لطلب آخر</p>
-          <div className="mt-[12px] flex h-[36px] items-center justify-between rounded-[12px] border border-[#e9edef] bg-[#f7fafb] px-[10px]">
+          <p className="mt-[18px] shrink-0 text-right font-['Tajawal'] text-[9px] font-normal text-[#85939b]">حدد {selectedRequest.units - selectedRequest.raw.units_reserved} وحدات متوافقة، الوحدة المحجوزة لن تكون متاحة لطلب آخر</p>
+          <div className="mt-[12px] flex h-[36px] shrink-0 items-center justify-between rounded-[12px] border border-[#e9edef] bg-[#f7fafb] px-[10px]">
             <span className="font-['Tajawal'] text-[9px] font-normal text-[#84929a]">اختر {selectedRequest.units - selectedRequest.raw.units_reserved} وحدات للمتابعة</span>
             <span className="inline-flex items-center gap-[10px] font-['Tajawal'] text-[15px] font-bold text-[#9E1B32]"><span dir="ltr">{selectedUnits.length} / {selectedRequest.units - selectedRequest.raw.units_reserved}</span><span className="text-[9px] font-normal text-[#84929a]">تم اختيارها</span></span>
           </div>
 
-          <div className="mt-[10px] flex flex-col gap-[5px]">
+          <div className="mt-[10px] flex min-h-0 flex-1 flex-col gap-[5px] overflow-y-auto overscroll-contain">
             {selectableUnits.map((unit) => (
-              <label key={unit.id} className={`flex h-[36px] cursor-pointer items-center justify-between rounded-[11px] border px-[10px] text-[9px] transition ${selectedUnits.includes(unit.id) ? "border-[#d45c70] bg-[#fffafb]" : "border-[#e9edef] hover:border-[#d8e0e3]"}`}>
+              <label key={unit.id} className={`flex min-h-[36px] shrink-0 cursor-pointer flex-wrap items-center justify-between gap-1 rounded-[11px] border px-[10px] py-1 text-[9px] transition ${selectedUnits.includes(unit.id) ? "border-[#d45c70] bg-[#fffafb]" : "border-[#e9edef] hover:border-[#d8e0e3]"}`}>
                 <span className="flex items-center gap-[7px]">
                   <input type="checkbox" checked={selectedUnits.includes(unit.id)} onChange={() => toggleUnit(unit.id)} disabled={!selectedUnits.includes(unit.id) && selectedUnits.length >= selectedRequest.units - selectedRequest.raw.units_reserved} className="sr-only" />
                   <span aria-hidden="true" className={`grid h-[11px] w-[11px] place-items-center rounded-full border ${selectedUnits.includes(unit.id) ? "border-[#9E1B32] bg-[#9E1B32] text-white" : "border-[#d7e0e4] bg-white"}`}>
@@ -359,7 +383,7 @@ export default function LatestRequests({ showHeader = true, toolbar, incomingMod
           </div>
           {error && <p role="alert" className="mt-2 text-[10px] text-[#B4233A]">{error}</p>}
 
-          <footer className="mt-auto flex gap-[7px] pt-[14px]">
+          <footer className="mt-auto flex shrink-0 gap-[7px] pt-[14px]">
             <button type="button" disabled={busy || selectedUnits.length !== selectedRequest.units - selectedRequest.raw.units_reserved} onClick={() => void reserveAndPrepare()} className="h-[33px] rounded-[9px] bg-[#9E1B32] px-[20px] text-[10px] font-bold text-white disabled:cursor-not-allowed disabled:bg-[#dfc9ce]">تأكيد حجز الوحدات</button>
             <button type="button" onClick={() => { unitsDialogRef.current?.close(); dialogRef.current?.showModal(); }} className="h-[33px] rounded-[9px] border border-[#e5e9ec] px-[15px] text-[10px] font-bold text-[#263A44] hover:bg-slate-50">رجوع</button>
           </footer>

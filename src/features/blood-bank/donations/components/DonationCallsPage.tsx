@@ -24,9 +24,10 @@ import {
 
 import type { DonationCall } from "../types/donation.types";
 
-import CreateDonationCallModal from "./CreateDonationCallModal";
 import DonationCallDetailsModal from "./DonationCallDetailsModal";
 import Link from "next/link";
+import HospitalCreateDonationCallDialog from "@/src/app/HospitalDashboard/components/CreateDonationCallDialog";
+import BloodBankCreateDonationCallDialog from "@/src/app/BloodBankDashboard/components/CreateDonationCallDialog";
 
 const TABS: Array<{
   value: DonationCallTab;
@@ -46,7 +47,9 @@ const TABS: Array<{
   },
 ];
 
-export default function DonationCallsPage() {
+export default function DonationCallsPage({
+  callsHref = "/HospitalDashboard/donations/calls",
+}: { callsHref?: string }) {
   const {
     calls,
 
@@ -71,21 +74,11 @@ export default function DonationCallsPage() {
     reload,
   } = useDonationCalls();
 
-  const [createOpen, setCreateOpen] = useState(false);
-
   const [detailsCallId, setDetailsCallId] = useState<number | null>(null);
 
-  const [notice, setNotice] = useState<string | null>(null);
-
-  function handleCreated() {
-    setNotice("تم إنشاء نداء التبرع بنجاح.");
-
-    reload();
-
-    window.setTimeout(() => {
-      setNotice(null);
-    }, 4000);
-  }
+  const CreateDonationCallDialog = callsHref.startsWith("/BloodBankDashboard")
+    ? BloodBankCreateDonationCallDialog
+    : HospitalCreateDonationCallDialog;
 
   return (
     <>
@@ -140,10 +133,9 @@ export default function DonationCallsPage() {
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="
+          <CreateDonationCallDialog
+            triggerLabel="إنشاء نداء"
+            triggerClassName="
               flex h-[46px]
               items-center
               justify-center
@@ -159,10 +151,7 @@ export default function DonationCallsPage() {
               transition
               hover:bg-[#94182f]
             "
-          >
-            <Plus className="h-4 w-4" />
-            إنشاء نداء
-          </button>
+          />
         </div>
 
         <div
@@ -283,24 +272,6 @@ export default function DonationCallsPage() {
           ))}
         </div>
 
-        {notice && (
-          <div
-            className="
-              mt-5
-              rounded-xl
-              border
-              border-emerald-100
-              bg-emerald-50
-              px-4 py-3
-              text-xs
-              font-semibold
-              text-emerald-700
-            "
-          >
-            {notice}
-          </div>
-        )}
-
         {error ? (
           <div
             className="
@@ -389,6 +360,7 @@ export default function DonationCallsPage() {
               <DonationCallCard
                 key={call.id}
                 call={call}
+                callsHref={callsHref}
                 onDetails={() => setDetailsCallId(call.id)}
               />
             ))}
@@ -458,13 +430,6 @@ export default function DonationCallsPage() {
         )}
       </section>
 
-      {createOpen && (
-        <CreateDonationCallModal
-          onClose={() => setCreateOpen(false)}
-          onCreated={handleCreated}
-        />
-      )}
-
       {detailsCallId !== null && (
         <DonationCallDetailsModal
           callId={detailsCallId}
@@ -477,9 +442,11 @@ export default function DonationCallsPage() {
 
 function DonationCallCard({
   call,
+  callsHref,
   onDetails,
 }: {
   call: DonationCall;
+  callsHref: string;
   onDetails: () => void;
 }) {
   return (
@@ -609,7 +576,7 @@ function DonationCallCard({
         "
       >
         <Link
-          href={`/HospitalDashboard/donations/calls/${call.id}/responders`}
+          href={`${callsHref}/${call.id}/responders`}
           className="
     inline-flex h-[38px]
     items-center
@@ -632,7 +599,7 @@ function DonationCallCard({
 
         {call.status === "active" ? (
           <Link
-            href={`/HospitalDashboard/donations/calls/${call.id}/targeting`}
+            href={`${callsHref}/${call.id}/targeting`}
             className="
       inline-flex h-[38px]
       items-center

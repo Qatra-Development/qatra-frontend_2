@@ -135,7 +135,7 @@ export default function AccountVerificationForm({ email, accountType }) {
         </p>
 
         {/* OTP Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col items-center">
+        <form onSubmit={handleSubmit} className="w-full max-w-sm flex flex-col items-center" noValidate>
           <div className="flex items-center justify-center gap-3 sm:gap-3.5 mb-7" dir="ltr" onPaste={handlePaste}>
             {values.map((value, index) => (
               <input

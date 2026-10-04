@@ -1,0 +1,169 @@
+.page {
+  font-family: var(--font-arabic), Arial, sans-serif;
+}
+
+.center > div {
+  padding: 0;
+  font-family: inherit;
+}
+
+.center > div > div:first-child > div > p:first-child {
+  display: none;
+}
+
+.center h1 {
+  color: var(--admin-text-primary);
+  font-size: 30px;
+}
+
+.center > div > div:first-child > div > p:last-child {
+  margin-top: 8px;
+  color: var(--admin-text-muted);
+  font-size: 14px;
+}
+
+.center section h2 {
+  height: 34px;
+  padding-inline: 16px 24px;
+  border-bottom: 1px solid #edf1f0;
+  background: #fbfcfc;
+  color: #65747a;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.center section > div > div + div {
+  border-top: 0;
+}
+
+.center article {
+  min-height: 110px;
+  padding: 16px 24px;
+  padding-inline-start: 16px;
+  gap: 24px;
+  background: #fff;
+}
+
+.center article:has(h3 + span) {
+  background: #f4faf8;
+}
+
+.center article > div:first-child {
+  gap: 12px;
+}
+
+.center article > div:first-child > span {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.center article > div:first-child > span svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.center article h3 {
+  color: #52615e;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.5;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.center article:has(h3 + span) h3 {
+  color: #1d2926;
+  font-weight: 700;
+}
+
+.center article h3 + span {
+  width: 7px;
+  height: 7px;
+  background: #bd2440;
+}
+
+.center article p {
+  margin-top: 4px;
+  color: #899397;
+  font-size: 15px;
+  line-height: 24px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.center article p + div {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.center article > div:last-child {
+  gap: 24px;
+}
+
+.center article > div:last-child button {
+  flex-direction: row-reverse;
+  color: #178879;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.center article > div:last-child > svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+
+.center article > div:last-child button svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.8;
+}
+
+.center > div > div:last-child {
+  border-color: #e7ecea;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgb(30 50 55 / 2%);
+}
+
+.center article p + div a {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 639px) {
+  .center h1 {
+    font-size: 24px;
+  }
+
+  .center article {
+    gap: 12px;
+    padding-inline-end: 12px;
+  }
+
+  .center article > div:first-child {
+    gap: 10px;
+  }
+
+  .center article > div:first-child > span {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  .center article h3 {
+    font-size: 16px;
+  }
+
+  .center article p {
+    font-size: 14px;
+  }
+
+  .center article p + div {
+    font-size: 12px;
+  }
+}

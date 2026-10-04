@@ -57,7 +57,7 @@ export default function ResetPasswordPage() {
             </header>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="w-full space-y-5">
+            <form onSubmit={handleSubmit} className="w-full space-y-5" noValidate>
                 {/* New Password */}
                 <div className="flex flex-col space-y-1.5">
                     <label htmlFor="new-password" className="text-right text-xs sm:text-[12.5px] font-semibold text-gray-800 pr-1">

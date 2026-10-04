@@ -23,9 +23,10 @@ import RegisterDonationModal from "./RegisterDonationModal";
 
 interface Props {
   callId: number;
+  callsHref?: string;
 }
 
-export default function DonationCallRespondersPage({ callId }: Props) {
+export default function DonationCallRespondersPage({ callId, callsHref = "/HospitalDashboard/donations/calls" }: Props) {
   const {
     call,
     responders,
@@ -133,7 +134,7 @@ export default function DonationCallRespondersPage({ callId }: Props) {
 
           {call?.status === "active" && (
             <Link
-              href={`/HospitalDashboard/donations/calls/${callId}/targeting`}
+              href={`${callsHref}/${callId}/targeting`}
               className="
                 inline-flex
                 h-[44px]

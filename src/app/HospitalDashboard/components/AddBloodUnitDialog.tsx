@@ -203,7 +203,7 @@ export default function AddBloodUnitDialog({ compact = false, onCreated }: { com
           </div>
 
           <div className="mt-8 flex justify-start">
-            <button type="button" onClick={() => { if (saved) dialogRef.current?.close(); else void submit(); }} disabled={saving || (!saved && !collectedAt)} className="rounded-[8px] bg-[#D58F9C] px-5 py-2.5 text-[11px] font-bold text-white shadow-sm transition-colors hover:bg-[#C97888] active:bg-[#9E1B32]">
+            <button type="button" onClick={() => { if (saved) dialogRef.current?.close(); else void submit(); }} disabled={saving || (!saved && !collectedAt)} className="rounded-[8px] bg-[#9E1B32] px-5 py-2.5 text-[11px] font-bold text-white shadow-sm transition-colors hover:bg-[#C97888] active:bg-[#D58F9C]">
               {saving ? "جارٍ التسجيل..." : saved ? "إغلاق" : createdCodes.length ? "تسجيل الوحدات المتبقية" : "تسجيل الوحدة"}
             </button>
           </div>

@@ -1,13 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { endAuthenticatedSession } from "../client/session";
 import { ApiError, getApiErrorMessage } from "@/src/lib/api/errors";
 
 export function useLogout() {
-  const router = useRouter();
   const pending = useRef(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -30,8 +28,9 @@ export function useLogout() {
       setIsLoggingOut(false);
     }
 
-    router.replace("/");
-    router.refresh();
+    // Load the public page after cookie removal, rather than reusing a
+    // prefetched Server Component tree rendered for the signed-in session.
+    window.location.replace("/login");
   }
 
   return { handleLogout, isLoggingOut };

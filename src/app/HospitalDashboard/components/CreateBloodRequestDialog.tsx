@@ -1,15 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Plus, X } from "lucide-react";
+import { createBloodRequest, getBloodSuppliers, saveBloodRequestDraft } from "@/src/features/institution/blood-requests/services/blood-request.service";
+import { buildCreatePayload, buildDraftPayload } from "@/src/features/institution/blood-requests/lib/blood-request.utils";
+import { createBloodRequestSchema } from "@/src/features/institution/blood-requests/schemas/blood-request.schema";
+import type { BloodRequestFormValues, BloodSupplier } from "@/src/features/institution/blood-requests/types/blood-request.types";
 
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const storageKey = "qatra:hospital:blood-requests";
-const suppliers = [
-  { name: "مركز الدم الإقليمي 01", location: "بنك الدم المركزي - رام الله والبيرة - مخيم قلنديا", available: 27 },
-  { name: "مركز الدم الإقليمي 04", location: "بنك الدم المركزي - الخليل", available: 30 },
-  { name: "مركز الدم الإقليمي 09", location: "بنك الدم المركزي - نابلس", available: 30 },
-];
 
 export default function CreateBloodRequestDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -23,27 +22,91 @@ export default function CreateBloodRequestDialog() {
   const [suppliersOpen, setSuppliersOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
+  const pending = useRef(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [supplierId, setSupplierId] = useState<number | null>(null);
+  const [supplierResult, setSupplierResult] = useState<{ key: string; items: BloodSupplier[] }>({ key: "", items: [] });
+  const supplierKey = `${bloodType}:${units}`;
+  const suppliersLoading = isOpen && supplierResult.key !== supplierKey;
+  const suppliers = (supplierResult.key === supplierKey ? supplierResult.items : []).map((item) => ({
+    id: item.id,
+    name: item.institution_name,
+    location: item.address || item.governorate,
+    available: item.available_units,
+  }));
 
-  const save = (draft: boolean) => {
+  useEffect(() => {
+    if (!isOpen) return;
+    const controller = new AbortController();
+    getBloodSuppliers(bloodType, units, controller.signal).then((result) => {
+      if (controller.signal.aborted) return;
+      setSupplierResult({ key: `${bloodType}:${units}`, items: result.items });
+      setSupplier("");
+      setSupplierId(null);
+    }).catch((cause) => {
+      if (!controller.signal.aborted) {
+        setSupplierResult({ key: `${bloodType}:${units}`, items: [] });
+        setError(cause instanceof Error ? cause.message : "تعذر تحميل الجهات الموردة.");
+      }
+    });
+    return () => controller.abort();
+  }, [isOpen, bloodType, units]);
+
+  const closeDialog = () => {
+    if (!pending.current) dialogRef.current?.close();
+  };
+
+  const save = async (draft: boolean) => {
+    if (pending.current) return;
     if (!draft && (!neededDate || !neededTime || !reason.trim() || !supplier)) {
       setError("يرجى تعبئة تاريخ ووقت الحاجة وسبب الطلب والجهة الموردة.");
       return;
     }
-    const record = {
-      id: `BR-${Date.now()}`,
-      type: bloodType,
-      units: `0/${units}`,
-      urgency,
-      status: draft ? "مسودة" : "قيد الانتظار",
-      needed: neededDate && neededTime ? `${neededDate.split("-").reverse().join("/")} - ${neededTime}` : "—",
-      updated: "الآن",
-      reason: reason.trim(),
-      supplier,
-      notes: notes.trim(),
-    };
     try {
-      const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
-      localStorage.setItem(storageKey, JSON.stringify([record, ...(Array.isArray(stored) ? stored : [])]));
+      const recipientIds = suppliers.some((item) => item.id === supplierId) && supplierId !== null ? [supplierId] : [];
+      const form: BloodRequestFormValues = {
+        blood_type: bloodType as BloodRequestFormValues["blood_type"],
+        units_required: String(units),
+        priority: urgency === "طارئ" ? "emergency" : urgency === "عاجل" ? "urgent" : "normal",
+        needed_date: neededDate,
+        needed_time: neededTime,
+        description: reason,
+        notes,
+        recipient_ids: recipientIds,
+      };
+      if (!draft) {
+        const validation = createBloodRequestSchema.safeParse(form);
+        if (!validation.success) {
+          setError(validation.error.issues[0]?.message || "يرجى التحقق من بيانات الطلب.");
+          return;
+        }
+      }
+      pending.current = true;
+      setError("");
+      const result = draft
+        ? await saveBloodRequestDraft(buildDraftPayload(form))
+        : await createBloodRequest(buildCreatePayload(form));
+      const request = result.request;
+      const record = {
+        id: request.request_number,
+        backendId: request.id,
+        type: request.blood_type,
+        units: `${request.units_provided}/${request.units_required}`,
+        urgency: request.priority_label,
+        status: request.status_label,
+        needed: request.needed_at ? new Date(request.needed_at).toLocaleString("en-GB", { hour12: true }).replace(", ", " - ") : "—",
+        updated: "الآن",
+        reason: request.description,
+        supplier,
+        notes: request.notes || "",
+      };
+      // Keep the existing list in sync using the confirmed server response.
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        localStorage.setItem(storageKey, JSON.stringify([record, ...(Array.isArray(stored) ? stored : [])]));
+      } catch {
+        // A local cache failure must not turn a successful API request into a retry.
+      }
       window.dispatchEvent(new Event("qatra:blood-request-created"));
       dialogRef.current?.close();
       setError("");
@@ -52,32 +115,35 @@ export default function CreateBloodRequestDialog() {
       setNeededDate("");
       setNeededTime("");
       setSupplier("");
+      setSupplierId(null);
       setSuppliersOpen(false);
-    } catch {
-      setError("تعذر حفظ الطلب. حاول مجددًا.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "تعذر حفظ الطلب. حاول مجددًا.");
+    } finally {
+      pending.current = false;
     }
   };
 
   return (
     <>
-      <button type="button" onClick={() => dialogRef.current?.showModal()} className="flex items-center gap-1.5 rounded-md bg-[#B4233A] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#991F32]">
+      <button type="button" onClick={() => { setError(""); setSupplier(""); setSupplierId(null); setSupplierResult({ key: "", items: [] }); setIsOpen(true); dialogRef.current?.showModal(); }} className="flex items-center gap-1.5 rounded-md bg-[#B4233A] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#991F32]">
         <Plus className="h-4 w-4" strokeWidth={1.8} />
         طلب دم جديد
       </button>
-      <dialog ref={dialogRef} dir="rtl" aria-labelledby="create-blood-request-title" onClick={(event) => { if (event.target === dialogRef.current) dialogRef.current.close(); }} className="m-auto w-[min(460px,calc(100vw-24px))] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-[14px] border-0 bg-white p-0 font-['Tajawal'] text-[#263746] shadow-[0_20px_60px_rgba(20,32,42,0.2)] backdrop:bg-[#1F2937]/55">
+      <dialog ref={dialogRef} dir="rtl" aria-labelledby="create-blood-request-title" onClose={() => setIsOpen(false)} onCancel={(event) => { if (pending.current) event.preventDefault(); }} onClick={(event) => { if (event.target === dialogRef.current) closeDialog(); }} className="m-auto w-[min(460px,calc(100vw-24px))] max-h-[calc(100dvh-24px)] overflow-y-auto rounded-[14px] border-0 bg-white p-0 font-['Tajawal'] text-[#263746] shadow-[0_20px_60px_rgba(20,32,42,0.2)] backdrop:bg-[#1F2937]/55">
         <div className="px-5 pb-5 pt-4">
           <header className="flex items-start justify-between border-b border-[#edf0f2] pb-4">
             <div>
               <p className="text-[10px] font-bold text-[#9e1b32]">طلب جديد</p>
               <h2 id="create-blood-request-title" className="mt-1 text-[18px] font-bold">إنشاء طلب دم</h2>
             </div>
-            <button type="button" onClick={() => dialogRef.current?.close()} aria-label="إغلاق إنشاء طلب الدم" className="rounded p-1 text-[#74828a] hover:bg-slate-100"><X className="h-4 w-4" /></button>
+            <button type="button" onClick={closeDialog} aria-label="إغلاق إنشاء طلب الدم" className="rounded p-1 text-[#74828a] hover:bg-slate-100"><X className="h-4 w-4" /></button>
           </header>
 
           <fieldset className="mt-4">
             <legend className="mb-2 text-[11px] font-bold">فصيلة الدم</legend>
             <div className="grid grid-cols-4 gap-2">
-              {bloodTypes.map((type) => <button key={type} type="button" onClick={() => setBloodType(type)} aria-pressed={bloodType === type} dir="ltr" className={`h-8 rounded-[7px] border font-sans text-[10px] ${bloodType === type ? "border-[#9e1b32] bg-[#fff3f5] font-bold text-[#9e1b32]" : "border-[#e7ebee] text-[#50616b] hover:border-[#d9a4ad]"}`}>{type}</button>)}
+              {bloodTypes.map((type) => <button key={type} type="button" onClick={() => setBloodType(type)} aria-pressed={bloodType === type} dir="ltr" className={`h-8 rounded-[7px] border font-sans text-[10px] ${bloodType === type ? "border-[#B4233A] bg-[#B4233A] font-bold text-white" : "border-[#e7ebee] text-[#50616b] hover:border-[#d9a4ad]"}`}>{type}</button>)}
             </div>
           </fieldset>
 
@@ -96,11 +162,13 @@ export default function CreateBloodRequestDialog() {
             {suppliersOpen && (
               <div id="request-suppliers" className="mt-2">
                 <div className="space-y-2" role="radiogroup" aria-label="الجهات الموردة">
+                  {suppliersLoading && <p className="py-2 text-center text-[10px] text-[#74828a]">جارٍ تحميل الجهات الموردة...</p>}
+                  {!suppliersLoading && suppliers.length === 0 && <p className="py-2 text-center text-[10px] text-[#74828a]">لا توجد جهة تستطيع توفير كامل الكمية المطلوبة.</p>}
                   {suppliers.map((item, index) => (
-                    <label key={item.name} className={`flex cursor-pointer items-center justify-between gap-3 rounded-[9px] border px-3 py-2 transition ${supplier === item.name ? "border-[#dd596d] bg-[#fff8f9]" : "border-[#e7ebee] bg-white hover:border-[#d9a4ad]"}`}>
+                    <label key={item.id} className={`flex cursor-pointer items-center justify-between gap-3 rounded-[9px] border px-3 py-2 transition ${supplierId === item.id ? "border-[#dd596d] bg-[#fff8f9]" : "border-[#e7ebee] bg-white hover:border-[#d9a4ad]"}`}>
                       <span className="flex min-w-0 items-center gap-3">
-                        <input type="radio" name="blood-request-supplier" value={item.name} checked={supplier === item.name} onChange={() => { setSupplier(item.name); setSuppliersOpen(false); }} className="h-3 w-3 accent-[#9e1b32]" />
-                        <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold ${supplier === item.name ? "bg-[#9e1b32] text-white" : "bg-[#f2f4f6] text-[#74828a]"}`}>{index + 1}</span>
+                        <input type="radio" name="blood-request-supplier" value={item.name} checked={supplierId === item.id} onChange={() => { setSupplier(item.name); setSupplierId(item.id); setSuppliersOpen(false); }} className="h-3 w-3 accent-[#9e1b32]" />
+                        <span className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-[9px] font-bold ${supplierId === item.id ? "bg-[#9e1b32] text-white" : "bg-[#f2f4f6] text-[#74828a]"}`}>{index + 1}</span>
                         <span className="min-w-0"><strong className="block truncate text-[11px]">{item.name}</strong><span className="block truncate text-[8px] text-[#98a5ac]">{item.location}</span></span>
                       </span>
                       <span className="shrink-0 text-center"><strong dir="ltr" className="block font-sans text-[12px] text-[#16845d]">{item.available}</strong><span className="text-[8px] text-[#98a5ac]">وحدة متاحة</span></span>
