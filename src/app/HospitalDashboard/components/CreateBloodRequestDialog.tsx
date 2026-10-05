@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { CheckCircle2, Plus, X } from "lucide-react";
 import { createBloodRequest, getBloodSuppliers, saveBloodRequestDraft } from "@/src/features/institution/blood-requests/services/blood-request.service";
 import { buildCreatePayload, buildDraftPayload } from "@/src/features/institution/blood-requests/lib/blood-request.utils";
 import { createBloodRequestSchema } from "@/src/features/institution/blood-requests/schemas/blood-request.schema";
@@ -12,6 +12,8 @@ const storageKey = "qatra:hospital:blood-requests";
 
 export default function CreateBloodRequestDialog() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const successDialogRef = useRef<HTMLDialogElement>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [bloodType, setBloodType] = useState("A+");
   const [urgency, setUrgency] = useState("عادي");
   const [units, setUnits] = useState(1);
@@ -52,8 +54,28 @@ export default function CreateBloodRequestDialog() {
     return () => controller.abort();
   }, [isOpen, bloodType, units]);
 
+  useEffect(() => () => {
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+  }, []);
+
   const closeDialog = () => {
     if (!pending.current) dialogRef.current?.close();
+  };
+
+  const closeSuccessDialog = () => {
+    if (successTimerRef.current) {
+      clearTimeout(successTimerRef.current);
+      successTimerRef.current = null;
+    }
+    successDialogRef.current?.close();
+  };
+
+  const showSuccessDialog = () => {
+    successDialogRef.current?.showModal();
+    successTimerRef.current = setTimeout(() => {
+      successDialogRef.current?.close();
+      successTimerRef.current = null;
+    }, 5000);
   };
 
   const save = async (draft: boolean) => {
@@ -117,6 +139,7 @@ export default function CreateBloodRequestDialog() {
       setSupplier("");
       setSupplierId(null);
       setSuppliersOpen(false);
+      if (!draft) showSuccessDialog();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "تعذر حفظ الطلب. حاول مجددًا.");
     } finally {
@@ -184,6 +207,16 @@ export default function CreateBloodRequestDialog() {
             <button type="button" onClick={() => save(false)} className="rounded-[8px] bg-[#9e1b32] px-4 py-2 text-[11px] font-bold text-white hover:bg-[#831529]">إرسال الطلب</button>
             <button type="button" onClick={() => save(true)} className="rounded-[8px] border border-[#e7ebee] px-4 py-2 text-[11px] font-bold text-[#536475] hover:bg-[#f7f9fa]">حفظ كمسودة</button>
           </footer>
+        </div>
+      </dialog>
+      <dialog ref={successDialogRef} dir="rtl" aria-labelledby="blood-request-success-title" onCancel={(event) => { event.preventDefault(); closeSuccessDialog(); }} onClick={(event) => { if (event.target === successDialogRef.current) closeSuccessDialog(); }} className="m-auto w-[min(390px,calc(100vw-24px))] rounded-[18px] border-0 bg-white p-0 font-['Tajawal'] text-[#263746] shadow-[0_20px_60px_rgba(20,32,42,0.22)] backdrop:bg-[#1F2937]/55">
+        <div className="relative flex flex-col items-center px-8 pb-8 pt-9 text-center">
+          <button type="button" onClick={closeSuccessDialog} aria-label="إغلاق رسالة نجاح الطلب" className="absolute left-4 top-4 rounded p-1 text-[#8b989f] hover:bg-slate-100"><X className="h-4 w-4" /></button>
+          <span className="grid h-16 w-16 place-items-center rounded-full bg-[#eaf8f3] text-[#2f9b73]">
+            <CheckCircle2 className="h-9 w-9" strokeWidth={2.2} />
+          </span>
+          <h2 id="blood-request-success-title" className="mt-5 text-[20px] font-extrabold text-[#20343d]">تمت إضافة الطلب بنجاح</h2>
+          <p className="mt-2 text-[12px] leading-6 text-[#7b8b93]">تم إرسال طلب الدم، ويمكنك متابعة حالته من قسم طلباتي.</p>
         </div>
       </dialog>
     </>

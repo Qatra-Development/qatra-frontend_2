@@ -93,7 +93,7 @@ export default function LoginForm() {
 
   return (
     <div
-      className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-xl mx-auto"
+      className="auth-scale-80 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-xl mx-auto"
       dir="rtl"
     >
       <div className="mb-6 sm:mb-8 text-right">
@@ -228,29 +228,6 @@ export default function LoginForm() {
         </div>
       </form>
 
-      {/* Divider */}
-      <div className="mt-6 sm:mt-8 relative">
-        <div aria-hidden="true" className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-200" />
-        </div>
-
-        <div className="relative flex justify-center text-xs sm:text-sm">
-          <span className="px-3 bg-white text-gray-400 font-medium">أو</span>
-        </div>
-      </div>
-
-      {/* Registration */}
-      <div className="mt-5 sm:mt-6 text-center">
-        <p className="text-xs sm:text-sm text-gray-600">
-          ليس لديك حساب؟{" "}
-          <Link
-            href="/select-path"
-            className="font-semibold text-brand-red hover:text-brand-red-dark transition-colors"
-          >
-            أنشئ حساباً جديداً
-          </Link>
-        </p>
-      </div>
     </div>
   );
 }

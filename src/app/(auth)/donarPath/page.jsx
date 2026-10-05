@@ -133,7 +133,7 @@ export default function DonorRegisterPage() {
     }`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-4xl mx-auto" dir="rtl">
+    <div className="auth-scale-80 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-4xl mx-auto" dir="rtl">
       <StepIndicator current="personal-info" />
 
       <p className="text-brand-red font-semibold text-xs sm:text-sm mb-1 sm:mb-2 text-right">مسار المتبرع</p>

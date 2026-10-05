@@ -9,7 +9,18 @@ import type { BloodRequestDetails, BloodRequestFormValues } from "@/src/features
 import { buildCreatePayload } from "@/src/features/institution/blood-requests/lib/blood-request.utils";
 import { createBloodRequestSchema } from "@/src/features/institution/blood-requests/schemas/blood-request.schema";
 
-const statuses = ["الكل", "مكتمل", "جاهز للتسليم", "بانتظار القبول", "قيد الانتظار", "مسودة", "مرفوض", "ملغي"] as const;
+const statuses = ["الكل", "مكتمل", "بانتظار الاستلام", "جاهز للتسليم", "قيد التجهيز", "مقبول", "بانتظار القبول", "مسودة", "مرفوض", "ملغي"] as const;
+const statusLabels: Record<string, (typeof statuses)[number]> = {
+  draft: "مسودة",
+  pending: "بانتظار القبول",
+  accepted: "مقبول",
+  preparing: "قيد التجهيز",
+  ready: "جاهز للتسليم",
+  sent: "بانتظار الاستلام",
+  completed: "مكتمل",
+  rejected: "مرفوض",
+  cancelled: "ملغي",
+};
 const bloodTypes = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 const editSuppliers = [
   { name: "مركز الدم الإقليمي 01", location: "بنك الدم المركزي - رام الله والبيرة - مخيم قلنديا", available: 27 },
@@ -40,8 +51,10 @@ type RequestRow = {
 
 const statusStyle: Record<string, string> = {
   "مكتمل": "bg-[#f1f8f8] text-[#477f83]",
+  "بانتظار الاستلام": "bg-[#eaf8f3] text-[#429477]",
   "جاهز للتسليم": "bg-[#eef2ff] text-[#4169c7]",
-  "قيد الانتظار": "bg-[#fff3d9] text-[#a36b13]",
+  "قيد التجهيز": "bg-[#fff3d9] text-[#a36b13]",
+  "مقبول": "bg-[#eef4ff] text-[#567aaa]",
   "بانتظار القبول": "bg-[#f3edff] text-[#7c4bb0]",
   "مسودة": "bg-[#f1f3f5] text-[#536475]",
   "مرفوض": "bg-[#fff0f2] text-[#a8203c]",
@@ -84,11 +97,9 @@ export default function MyRequestsPage() {
 
         if (cancelled) return;
 
-        const requests = await Promise.all(pages.flatMap((result) => result.items).map(async (request) => {
-          const details = ["ready", "completed"].includes(request.status)
-            ? await getBloodRequestDetails(request.id).catch(() => null)
-            : null;
-          const canReceive = details?.available_actions.receive === true;
+        const requests = pages.flatMap((result) => result.items).map((request) => {
+          const requestStatus = String(request.status);
+          const canReceive = requestStatus === "sent";
 
           return {
             id: request.request_number,
@@ -96,7 +107,7 @@ export default function MyRequestsPage() {
             type: request.blood_type,
             units: `${request.units_provided}/${request.units_required}`,
             urgency: request.priority_label,
-            status: canReceive ? "جاهز للتسليم" : request.status_label,
+            status: statusLabels[requestStatus] ?? request.status_label,
             needed: request.needed_at
               ? new Date(request.needed_at).toLocaleString("en-GB", { hour12: true }).replace(", ", " - ")
               : "—",
@@ -107,7 +118,7 @@ export default function MyRequestsPage() {
             notes: request.notes || "",
             canReceive,
           };
-        }));
+        });
 
         if (!cancelled) setSavedRequests(requests);
       } catch {
@@ -136,6 +147,10 @@ export default function MyRequestsPage() {
   const [appliedDate, setAppliedDate] = useState("");
   const [appliedFrom, setAppliedFrom] = useState("");
   const [appliedTo, setAppliedTo] = useState("");
+  const hasAppliedFilters = Boolean(appliedType || appliedUrgency || appliedDate);
+  const appliedDateLabel = appliedDate === "custom"
+    ? "تاريخ مخصص"
+    : dateOptions.find((item) => item.value === appliedDate)?.label;
   const visibleRequests = savedRequests.filter((request) =>
     (status === "الكل" || request.status === status) &&
     (!appliedType || request.type === appliedType) &&
@@ -251,7 +266,7 @@ export default function MyRequestsPage() {
       const received = await receiveBloodRequest(selectedRequest.backendId);
       const record: RequestRow = {
         ...selectedRequest,
-        status: received.status_label,
+        status: statusLabels[String(received.status)] ?? received.status_label,
         units: `${received.units_provided}/${received.units_required}`,
         updated: "الآن",
         canReceive: false,
@@ -404,25 +419,34 @@ export default function MyRequestsPage() {
     <div className="mx-auto max-w-[1240px] pt-[4px] font-['Tajawal']">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[22px] font-extrabold leading-[26px] text-[#172a3a]">طلباتي</h1>
-          <p className="mt-1 text-[11px] text-[#9aa6ad]">متابعة طلبات الدم الخاصة بمؤسستك فقط</p>
+          <h1 className="text-[27.5px] font-extrabold leading-[26px] text-[#172a3a]">طلباتي</h1>
+          <p className="mt-1 text-[13.75px] text-[#9aa6ad]">متابعة طلبات الدم الخاصة بمؤسستك فقط</p>
         </div>
         <CreateBloodRequestDialog />
       </div>
 
       <div className="mt-[13px] flex items-center gap-[7px]">
         <label htmlFor="my-requests-search" className="sr-only">ابحث برقم طلب الدم</label>
-        <input id="my-requests-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث برقم طلب الدم..." className="h-[32px] w-[264px] max-w-[calc(100%-64px)] rounded-[10px] border border-[#e5ebee] bg-white px-[12px] text-[10px] text-[#536475] outline-none placeholder:text-[#9daab1] focus:border-[#9e1b32]" />
-        <button type="button" onClick={() => filterDialogRef.current?.showModal()} aria-haspopup="dialog" className="flex h-[32px] items-center justify-center gap-[6px] rounded-[8px] border border-[#e1e6ed] bg-white px-[11px] text-[10px] font-medium text-[#536475] shadow-[0_1px_2px_rgba(30,36,50,0.02)]"><span>الفلاتر</span><svg className="h-[13px] w-[13px]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M7 12h10m-7 6h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg></button>
+        <input id="my-requests-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="ابحث برقم طلب الدم..." className="h-[32px] w-[264px] max-w-[calc(100%-64px)] rounded-[10px] border border-[#e5ebee] bg-white px-[12px] text-[12.5px] text-[#536475] outline-none placeholder:text-[#9daab1] focus:border-[#9e1b32]" />
+        <button type="button" onClick={() => filterDialogRef.current?.showModal()} aria-haspopup="dialog" className="flex h-[32px] items-center justify-center gap-[6px] rounded-[8px] border border-[#e1e6ed] bg-white px-[11px] text-[12.5px] font-medium text-[#536475] shadow-[0_1px_2px_rgba(30,36,50,0.02)]"><span>الفلاتر</span><svg className="h-[13px] w-[13px]" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M7 12h10m-7 6h4" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" /></svg></button>
       </div>
 
       <nav aria-label="تصفية طلباتي حسب الحالة" className="mt-[9px] flex flex-wrap gap-[5px]">
-        {[...statuses].reverse().map((item) => <button key={item} type="button" onClick={() => setStatus(item)} aria-pressed={status === item} className={`rounded-full px-[10px] py-[5px] text-[10px] transition ${status === item ? "border border-[#e8ecef] bg-white font-bold text-[#536475] shadow-sm" : "text-[#99a7ae] hover:bg-white/70"}`}>{item}</button>)}
+        {[...statuses].reverse().map((item) => <button key={item} type="button" onClick={() => setStatus(item)} aria-pressed={status === item} className={`rounded-full px-[10px] py-[5px] text-[12.5px] transition ${status === item ? "border border-[#e8ecef] bg-white font-bold text-[#536475] shadow-sm" : "text-[#99a7ae] hover:bg-white/70"}`}>{item}</button>)}
       </nav>
+
+      {hasAppliedFilters && (
+        <div className="mt-[9px] flex flex-wrap items-center gap-[7px] text-[11px] text-[#536475]">
+          <button type="button" onClick={resetFilters} className="font-medium text-[#263746] hover:underline">إعادة ضبط الكل</button>
+          {appliedUrgency && <button type="button" onClick={() => { setAppliedUrgency(""); setDraftUrgency(""); }} className="inline-flex h-[28px] items-center gap-[7px] rounded-full border border-[#dfe5e9] bg-white px-[10px] shadow-sm"><span aria-hidden="true">×</span><span>{appliedUrgency}</span></button>}
+          {appliedType && <button type="button" dir="ltr" onClick={() => { setAppliedType(""); setDraftType(""); }} className="inline-flex h-[28px] items-center gap-[7px] rounded-full border border-[#dfe5e9] bg-white px-[10px] shadow-sm"><span aria-hidden="true">×</span><span>{appliedType}</span></button>}
+          {appliedDate && <button type="button" onClick={() => { setAppliedDate(""); setAppliedFrom(""); setAppliedTo(""); setDraftDate(""); setDraftFrom(""); setDraftTo(""); }} className="inline-flex h-[28px] items-center gap-[7px] rounded-full border border-[#dfe5e9] bg-white px-[10px] shadow-sm"><span aria-hidden="true">×</span><span>{appliedDateLabel}</span></button>}
+        </div>
+      )}
 
       <section aria-label="قائمة طلباتي" className="mt-[17px] rounded-[14px] border border-[#e8ecef] bg-white px-[12px] pb-[17px] pt-[12px] shadow-[0_3px_12px_rgba(30,36,50,0.025)]">
         <div className="overflow-x-auto">
-          {visibleRequests.length > 0 ? <table className="w-full min-w-[670px] table-fixed border-separate border-spacing-0 text-right text-[10px] text-[#687982]">
+          {visibleRequests.length > 0 ? <table className="w-full min-w-[670px] table-fixed border-separate border-spacing-0 text-right text-[11px] text-[#687982]">
             <thead className="bg-[#f3f8f9] font-bold text-[#60717a]"><tr>
               <th className="w-[15%] rounded-r-[9px] px-[8px] py-[10px]">رقم الطلب</th>
               <th className="w-[9%] px-[8px] py-[10px]">الفصيلة</th>
@@ -433,13 +457,13 @@ export default function MyRequestsPage() {
               <th className="w-[12%] px-[8px] py-[10px]">آخر تحديث</th>
               <th className="w-[10%] rounded-l-[9px] px-[8px] py-[10px]" aria-label="الإجراءات" />
             </tr></thead>
-            <tbody className="text-[13px]">{visibleRequests.map((request) => <tr key={request.id} onClick={() => openRequestDetails(request)} className="h-[39px] cursor-pointer">
-              <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[12px] font-bold text-[#9e1b32]">{request.id}</td>
+            <tbody className="text-[14.3px]">{visibleRequests.map((request) => <tr key={request.id} onClick={() => openRequestDetails(request)} className="h-[39px] cursor-pointer">
+              <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[13.2px] font-bold text-[#9e1b32]">{request.id}</td>
               <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans font-bold text-[#263746]">{request.type}</td>
               <td dir="ltr" className="border-b border-[#f1f3f4] px-[8px] text-right font-sans">{request.units}</td>
               <td className={`border-b border-[#f1f3f4] px-[8px] ${request.urgency === "طارئ" ? "font-bold text-[#ae2440]" : ""}`}>{request.urgency}</td>
-              <td className="border-b border-[#f1f3f4] px-[8px]"><span className={`inline-flex items-center gap-[4px] whitespace-nowrap rounded-full px-[7px] py-[4px] text-[12px] font-bold ${statusStyle[request.status]}`}><span className="h-[4px] w-[4px] rounded-full bg-current" />{request.status}</span></td>
-              <td dir="ltr" className="whitespace-nowrap border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[12px]">{request.needed}</td>
+              <td className="border-b border-[#f1f3f4] px-[8px]"><span className={`inline-flex items-center gap-[4px] whitespace-nowrap rounded-full px-[7px] py-[4px] text-[13.2px] font-bold ${statusStyle[request.status]}`}><span className="h-[4px] w-[4px] rounded-full bg-current" />{request.status}</span></td>
+              <td dir="ltr" className="whitespace-nowrap border-b border-[#f1f3f4] px-[8px] text-right font-sans text-[13.2px]">{request.needed}</td>
               <td className="border-b border-[#f1f3f4] px-[8px]">{request.updated}</td>
               <td className="border-b border-[#f1f3f4] px-[8px]"><button type="button" onClick={(event) => { event.stopPropagation(); openRequestDetails(request); }} aria-label={`خيارات الطلب ${request.id}`} className="rounded p-1 text-[#263746] hover:bg-[#f3f6f7]"><MoreHorizontal className="h-[14px] w-[14px]" /></button></td>
             </tr>)}</tbody>

@@ -11,7 +11,6 @@ const AUTH_ROUTES = new Set([
   "/donarPath",
   "/HospitalRegister",
   "/HospitalDocuments",
-  "/personal-info",
   "/verify",
 ]);
 
@@ -197,7 +196,6 @@ export const config = {
     "/donarPath",
     "/HospitalRegister",
     "/HospitalDocuments",
-    "/personal-info",
     "/verify",
   ],
 };

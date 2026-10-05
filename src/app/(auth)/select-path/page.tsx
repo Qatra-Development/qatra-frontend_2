@@ -4,7 +4,7 @@ import { Heart, Building2, ArrowLeft } from "lucide-react";
 
 export default function SelectPathPage() {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-4xl mx-auto" dir="rtl">
+    <div className="auth-scale-80 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 sm:p-8 md:p-12 w-full max-w-4xl mx-auto" dir="rtl">
       <StepIndicator current="select-path" />
 
       <p className="text-brand-red font-semibold text-xs sm:text-sm mb-1 sm:mb-2 text-right">إنشاء حساب جديد</p>
@@ -81,12 +81,6 @@ export default function SelectPathPage() {
         </Link>
       </div>
 
-      <p className="text-center text-xs sm:text-sm text-brand-gray">
-        لديك حساب بالفعل؟{" "}
-        <Link href="/login" className="text-brand-red font-semibold hover:underline">
-          تسجيل الدخول
-        </Link>
-      </p>
     </div>
   );
 }

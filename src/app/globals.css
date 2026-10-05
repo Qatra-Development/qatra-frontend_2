@@ -337,3 +337,23 @@ html {
     box-shadow: 0 0 0 3px rgba(181, 31, 59, 0.07);
   }
 }
+/* Keep the auth-page composition intact while rendering the requested pages 20% smaller. */
+.auth-scale-80 {
+  zoom: 0.8;
+}
+
+main:has(.auth-scale-80) .auth-side-banner {
+  zoom: 0.8;
+}
+
+main:has(.auth-scale-80) .auth-page-navbar > * {
+  scale: 0.8;
+}
+
+main:has(.auth-scale-80) .auth-page-navbar > :first-child {
+  transform-origin: right center;
+}
+
+main:has(.auth-scale-80) .auth-page-navbar > :last-child {
+  transform-origin: left center;
+}

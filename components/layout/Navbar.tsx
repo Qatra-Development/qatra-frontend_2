@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cookies } from "next/headers";
 import { AUTH_COOKIE_NAME } from "@/src/lib/auth/constants";
+import AuthNavbarAction from "./AuthNavbarAction";
 
 function QatraLogo() {
   return (
@@ -33,7 +34,7 @@ export default async function Navbar() {
   const hasSession = Boolean((await cookies()).get(AUTH_COOKIE_NAME)?.value);
 
   return (
-    <header className="w-full py-4 sm:py-6 px-4 sm:px-8 flex justify-between items-center absolute top-0 left-0 right-0 z-20 bg-transparent">
+    <header className="auth-page-navbar w-full py-4 sm:py-6 px-4 sm:px-8 flex justify-between items-center absolute top-0 left-0 right-0 z-20 bg-transparent">
       {/* Right: Logo + Back link */}
       <nav className="flex items-center gap-2 sm:gap-3" aria-label="التنقل الرئيسي">
         <QatraLogo />
@@ -55,19 +56,7 @@ export default async function Navbar() {
       </nav>
 
       {/* Left: Login */}
-      {!hasSession && (
-        <div className="flex items-center gap-1.5 sm:gap-2">
-          <span className="text-brand-gray text-xs sm:text-sm hidden sm:inline">
-            لديك حساب بالفعل؟
-          </span>
-          <Link
-            href="/login"
-            className="text-brand-red font-semibold text-xs sm:text-sm hover:underline whitespace-nowrap"
-          >
-            تسجيل الدخول
-          </Link>
-        </div>
-      )}
+      <AuthNavbarAction hasSession={hasSession} />
     </header>
   );
 }

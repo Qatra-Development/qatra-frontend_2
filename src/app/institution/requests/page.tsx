@@ -1,5 +1,5 @@
-import { BloodRequestsScreen } from "@/src/features/institution/blood-requests/components/BloodRequestsScreen";
+import HospitalMyRequestsPage from "@/src/app/HospitalDashboard/my-requests/page";
 
 export default function InstitutionRequestsPage() {
-  return <BloodRequestsScreen />;
+  return <HospitalMyRequestsPage />;
 }
