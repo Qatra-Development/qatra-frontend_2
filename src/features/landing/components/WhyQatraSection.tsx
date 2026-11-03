@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { ListChecks, Network, TrendingUp, Zap } from "lucide-react";
 
 import LandingReveal from "./LandingReveal";
@@ -52,7 +53,12 @@ export default function WhyQatraSection() {
               sm:text-[40px]
             "
           >
-            لماذا قطرة؟
+            <span>لماذا </span>
+            <span className="inline-flex items-center gap-2">
+              <Image src="/img/logo.png" alt="" width={40} height={40} className="h-10 w-10 object-contain" />
+              <span className="text-[#a71931]">قطرة</span>
+            </span>
+            <span>؟</span>
           </h2>
 
           <div

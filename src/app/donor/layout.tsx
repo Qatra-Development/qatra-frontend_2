@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import DonorSidebar from "@/src/features/donor-dashboard/components/DonorSidebar";
-import MobileNavigation from "@/src/components/layout/MobileNavigation";
+import DonorMobileNavigation from "@/src/features/donor-dashboard/components/DonorMobileNavigation";
 
 export default function DonorLayout({ children }: { children: ReactNode }) {
   return (
@@ -14,7 +14,9 @@ export default function DonorLayout({ children }: { children: ReactNode }) {
       "
     >
       <DonorSidebar />
-      <MobileNavigation><DonorSidebar /></MobileNavigation>
+      <DonorMobileNavigation>
+        <DonorSidebar />
+      </DonorMobileNavigation>
 
       <main className="lg:mr-[260px]">{children}</main>
     </div>

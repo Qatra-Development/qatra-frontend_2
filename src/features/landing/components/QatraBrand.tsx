@@ -13,6 +13,7 @@ export default function QatraBrand({
   return (
     <Link
       href="/#home"
+      dir="rtl"
       className={`
         inline-flex
         items-center

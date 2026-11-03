@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-arabic: "IBM Plex Sans Arabic", Arial, sans-serif;
+  --font-arabic: Tajawal, "IBM Plex Sans Arabic", Arial, sans-serif;
   --font-tajawal: Tajawal, sans-serif;
 
   /* Brand Colors */
@@ -340,6 +340,12 @@ html {
 /* Keep the auth-page composition intact while rendering the requested pages 20% smaller. */
 .auth-scale-80 {
   zoom: 0.8;
+}
+
+/* Keep the Arabic display font consistent across all page content and controls. */
+body,
+body :where(*) {
+  font-family: var(--font-arabic);
 }
 
 main:has(.auth-scale-80) .auth-side-banner {

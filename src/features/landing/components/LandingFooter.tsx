@@ -1,241 +1,38 @@
-import { Globe2, Mail, MapPin, Phone, Share2 } from "lucide-react";
-
 import QatraBrand from "./QatraBrand";
 
-const quickLinks = [
-  {
-    href: "#home",
-    label: "الرئيسية",
-  },
-  {
-    href: "#how-it-works",
-    label: "كيف تعمل قطرة؟",
-  },
-  {
-    href: "#services",
-    label: "الخدمات",
-  },
-  {
-    href: "#campaigns",
-    label: "حملات التبرع",
-  },
+const links = [
+  { href: "#services", label: "خدمات المنصة" },
+  { href: "#how-it-works", label: "كيف نعمل" },
+  { href: "#campaigns", label: "الأسئلة الشائعة" },
 ];
 
 export default function LandingFooter() {
   return (
-    <footer
-      className="
-        bg-[#eaf2f3]
-        pt-20
-      "
-    >
-      <div
-        className="
-          mx-auto
-          max-w-[1360px]
-          px-5
-          lg:px-8
-        "
-      >
-        <div
-          className="
-            grid
-            gap-12
-            md:grid-cols-2
-            xl:grid-cols-4
-          "
-        >
-          <div>
-            <QatraBrand showEnglish={false} />
-
-            <p
-              className="
-                mt-6
-                max-w-[330px]
-                text-[13px]
-                leading-[1.9]
-                text-[#726662]
-              "
-            >
-              منصة رائدة لربط المتبرعين بالمؤسسات الصحية بسلاسة وموثوقية.
-            </p>
-
-            <div
-              className="
-                mt-7
-                flex gap-3
-              "
-            >
-              {[Mail, Globe2, Share2].map((Icon, index) => (
-                <span
-                  key={index}
-                  className="
-                      grid h-9 w-9
-                      place-items-center
-                      rounded-full
-                      bg-[#dbe6f3]
-                      text-[#617586]
-                    "
-                >
-                  <Icon className="h-4 w-4" />
-                </span>
-              ))}
-            </div>
+    <footer dir="rtl" className="bg-[#f8fbfb] text-[#87969b]">
+      <div className="mx-auto max-w-[1360px] px-5 lg:px-10">
+        <div className="grid min-h-[87px] items-center gap-5 border-b border-[#e1e9e9] py-5 md:grid-cols-[1fr_1.2fr_1fr]">
+          <div className="flex items-center justify-start">
+            <QatraBrand showEnglish={false} className="gap-1.5 [&_img]:h-[38px] [&_img]:w-[28px] [&_strong]:text-[23px] [&_strong]:text-[#b0183c]" />
           </div>
 
-          <div>
-            <h3
-              className="
-                text-[16px]
-                font-bold
-                text-[#403a38]
-              "
-            >
-              روابط سريعة
-            </h3>
+          <p className="text-center text-[9px] leading-[1.8] text-[#89979c]">
+            نصل العطاء بالحياة.<br />منصة التنسيق لتبرع بالدم.
+          </p>
 
-            <div
-              className="
-                mt-6
-                space-y-4
-              "
-            >
-              {quickLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  className="
-                      block
-                      text-[13px]
-                      text-[#786b68]
-                      transition
-                      hover:text-[#a71931]
-                    "
-                >
-                  {link.label}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3
-              className="
-                text-[16px]
-                font-bold
-                text-[#403a38]
-              "
-            >
-              المساعدة والدعم
-            </h3>
-
-            <div
-              className="
-                mt-6
-                space-y-4
-                text-[13px]
-                text-[#786b68]
-              "
-            >
-              <span className="block">الأسئلة الشائعة</span>
-
-              <span className="block">شروط الاستخدام</span>
-
-              <span className="block">سياسة الخصوصية</span>
-            </div>
-          </div>
-
-          <div>
-            <h3
-              className="
-                text-[16px]
-                font-bold
-                text-[#403a38]
-              "
-            >
-              تواصل معنا
-            </h3>
-
-            <div
-              className="
-                mt-6
-                space-y-5
-                text-[13px]
-                text-[#786b68]
-              "
-            >
-              <div
-                className="
-                  flex items-center
-                  gap-3
-                "
-              >
-                <Mail
-                  className="
-                    h-4 w-4
-                    text-[#657986]
-                  "
-                />
-
-                <span dir="ltr">info@qatra.com</span>
-              </div>
-
-              <div
-                className="
-                  flex items-center
-                  gap-3
-                "
-              >
-                <Phone
-                  className="
-                    h-4 w-4
-                    text-[#657986]
-                  "
-                />
-
-                <span dir="ltr">+970 123 456 789</span>
-              </div>
-
-              <div
-                className="
-                  flex items-center
-                  gap-3
-                "
-              >
-                <MapPin
-                  className="
-                    h-4 w-4
-                    text-[#657986]
-                  "
-                />
-
-                <span>فلسطين</span>
-              </div>
-            </div>
-          </div>
+          <nav aria-label="روابط التذييل" className="flex items-center justify-start gap-5 text-[8px] sm:gap-7">
+            {links.map((link) => (
+              <a key={link.href} href={link.href} className="whitespace-nowrap transition-colors hover:text-[#ad1b3b]">
+                {link.label}
+              </a>
+            ))}
+          </nav>
         </div>
 
-        <div
-          className="
-            mt-16
-            flex
-            flex-col
-            gap-4
-            border-t
-            border-[#d9e3e5]
-            py-8
-            text-[11px]
-            text-[#776a67]
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-          "
-        >
-          <span>جميع الحقوق محفوظة لقطرة © ٢٠٢٤</span>
-
-          <span>
-            منصة وطنية آمنة تربط بين المتبرعين ومراكز الدم والمؤسسات الصحية
-          </span>
+        <div className="flex min-h-[58px] flex-col-reverse items-start justify-between gap-3 py-3 text-[8px] text-[#9aa7ab] sm:flex-row sm:items-center">
+          <span>© 2026 حقوق كل قطرة محفوظة.</span>
+          <a href="#home" className="rounded-full border border-[#dce8e4] px-3 py-1.5 text-[8px] text-[#81968f] transition-colors hover:border-[#a7c5ba] hover:text-[#527d6d]">
+            سياسة الخصوصية · الشروط
+          </a>
         </div>
       </div>
     </footer>

@@ -34,7 +34,7 @@ export default function DashboardHeader() {
     .filter((_, index) => !(segments[0] === "donations" && segments[1] === "calls" && index === 2));
 
   return (
-    <header className="bg-[#f7f9fa] px-5 pr-18 pt-5 sm:pr-20 lg:px-7 lg:pt-7">
+    <header className="sticky top-0 z-30 bg-[#f7f9fa] px-5 pr-18 pt-5 sm:pr-20 lg:px-7 lg:pt-7">
       <div className="mx-auto max-w-[1240px]">
         <div className={`flex items-center justify-between ${isNotificationsPage ? "pb-0" : "pb-6"}`}>
           <div className="flex min-w-0 flex-1 items-center gap-3">

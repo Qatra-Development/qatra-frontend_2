@@ -79,7 +79,7 @@ export default function LandingNavbar({
           lg:px-8
         "
       >
-        <QatraBrand />
+        <QatraBrand className="[&_img]:h-[48px] [&_img]:w-[48px]" />
 
         <nav
           className="

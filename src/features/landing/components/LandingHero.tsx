@@ -42,14 +42,14 @@ export default function LandingHero() {
               lg:text-[66px]
             "
           >
-            تبرعك اليوم
+            ØªØ¨Ø±Ø¹Ùƒ Ø§Ù„ÙŠÙˆÙ…
             <span
               className="
                 block
                 text-[#a50022]
               "
             >
-              حياة تنبض غداً
+              Ø­ÙŠØ§Ø© ØªÙ†Ø¨Ø¶ ØºØ¯Ø§Ù‹
             </span>
           </h1>
 
@@ -63,8 +63,8 @@ export default function LandingHero() {
               sm:text-[16px]
             "
           >
-            منصة رائدة لربط المتبرعين بالمؤسسات الصحية بسلاسة وموثوقية. نحن نسهل
-            عملية التبرع بالدم لضمان وصوله لمن هم في أمس الحاجة إليه.
+            Ù…Ù†ØµØ© Ø±Ø§Ø¦Ø¯Ø© Ù„Ø±Ø¨Ø· Ø§Ù„Ù…ØªØ¨Ø±Ø¹ÙŠÙ† Ø¨Ø§Ù„Ù…Ø¤Ø³Ø³Ø§Øª Ø§Ù„ØµØ­ÙŠØ© Ø¨Ø³Ù„Ø§Ø³Ø© ÙˆÙ…ÙˆØ«ÙˆÙ‚ÙŠØ©. Ù†Ø­Ù† Ù†Ø³Ù‡Ù„
+            Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªØ¨Ø±Ø¹ Ø¨Ø§Ù„Ø¯Ù… Ù„Ø¶Ù…Ø§Ù† ÙˆØµÙˆÙ„Ù‡ Ù„Ù…Ù† Ù‡Ù… ÙÙŠ Ø£Ù…Ø³ Ø§Ù„Ø­Ø§Ø¬Ø© Ø¥Ù„ÙŠÙ‡.
           </p>
 
           <div
@@ -96,7 +96,7 @@ export default function LandingHero() {
               "
             >
               <Droplet className="h-5 w-5" />
-              تبرع بالدم
+              ØªØ¨Ø±Ø¹ Ø¨Ø§Ù„Ø¯Ù…
             </Link>
 
             <Link
@@ -122,7 +122,7 @@ export default function LandingHero() {
               "
             >
               <Building2 className="h-5 w-5" />
-              أنا مؤسسة صحية
+              Ø£Ù†Ø§ Ù…Ø¤Ø³Ø³Ø© ØµØ­ÙŠØ©
             </Link>
           </div>
         </div>
@@ -282,11 +282,11 @@ function HeroVisual() {
             className="
               block
               text-[11px]
-              font-black
+              font-extrabold
               text-[#26373e]
             "
           >
-            لا توجد طلبات دم
+            Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø¯Ù…
           </strong>
 
           <span
@@ -296,7 +296,7 @@ function HeroVisual() {
               text-[#9ba5a9]
             "
           >
-            ستظهر الطلبات بعد إنشائها
+            Ø³ØªØ¸Ù‡Ø± Ø§Ù„Ø·Ù„Ø¨Ø§Øª Ø¨Ø¹Ø¯ Ø¥Ù†Ø´Ø§Ø¦Ù‡Ø§
           </span>
         </div>
 
@@ -349,7 +349,7 @@ function HeroVisual() {
               text-[#a71931]
             "
           >
-            م
+            Ù…
           </span>
 
           <span
@@ -363,7 +363,7 @@ function HeroVisual() {
               text-[#647887]
             "
           >
-            ل
+            Ù„
           </span>
 
           <span
@@ -377,7 +377,7 @@ function HeroVisual() {
               text-[#c54a5e]
             "
           >
-            أ
+            Ø£
           </span>
         </div>
 
@@ -386,11 +386,11 @@ function HeroVisual() {
             className="
               block
               text-[11px]
-              font-black
+              font-extrabold
               text-[#26373e]
             "
           >
-            10 متبرع
+            10 Ù…ØªØ¨Ø±Ø¹
           </strong>
 
           <span
@@ -400,7 +400,7 @@ function HeroVisual() {
               text-[#9ba5a9]
             "
           >
-            من مختلف المحافظات
+            Ù…Ù† Ù…Ø®ØªÙ„Ù Ø§Ù„Ù…Ø­Ø§ÙØ¸Ø§Øª
           </span>
         </div>
       </div>

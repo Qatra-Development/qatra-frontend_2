@@ -1,32 +1,81 @@
-import type { Metadata } from "next";
-
-import LandingPage from "@/src/features/landing/components/LandingPage";
+﻿import type { Metadata } from "next";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowUpLeft,
+  CheckCircle2,
+  Heart,
+  Hospital,
+  Menu,
+  UsersRound,
+  Droplet,
+} from "lucide-react";
 
 import { getLandingSession } from "@/src/features/landing/lib/landing-session";
-
-import { getFeaturedPublicCampaigns } from "@/src/features/landing/services/public-campaign.service";
+import { LANDING_ROUTES } from "@/src/features/landing/config/landing.config";
 
 export const metadata: Metadata = {
-  title: "قطرة | تبرعك اليوم حياة تنبض غدًا",
-
-  description:
-    "منصة قطرة لربط المتبرعين بالمؤسسات الصحية وتنظيم التبرع بالدم والاحتياجات بشكل آمن وموثوق.",
+  title: "قطرة | نصل العطاء بالحياة",
+  description: "قطرة، منصة لتنسيق التبرع بالدم بين المتبرعين والمستشفيات وبنوك الدم.",
 };
 
-export default async function HomePage() {
-  const [session, campaignsResult] = await Promise.all([
-    getLandingSession(),
+const services = [
+  { number: "01", title: "تنظيم طلبات الدم", description: "جمع تفاصيل الاحتياج في مساحة منظمة تسهّل التواصل والمتابعة بين الأطراف المعنية.", icon: Droplet },
+  { number: "02", title: "حملات التبرع", description: "التعرّف إلى فرص المشاركة وتفاصيل الجهة المنظمة والمكان والموعد في مكان واحد.", icon: UsersRound },
+  { number: "03", title: "تواصل أقرب", description: "ربط الراغبين بالتبرع بالجهات الطبية، لتقليل تشتّت المعلومات وتسهيل التنسيق.", icon: Heart },
+];
 
-    getFeaturedPublicCampaigns(3),
-  ]);
+export default async function HomePage() {
+  const session = await getLandingSession();
+  const joinHref = session.isAuthenticated ? session.dashboardHref : LANDING_ROUTES.donorRegister;
 
   return (
-    <LandingPage
-      campaigns={campaignsResult.data}
-      campaignsError={campaignsResult.error}
-      isAuthenticated={session.isAuthenticated}
-      dashboardHref={session.dashboardHref}
-      urgentResponseHref={session.urgentResponseHref}
-    />
+    <div dir="rtl" className="min-h-screen bg-white text-[#21333b] [--qatra-red:#a01d40] [--qatra-dark:#71152e] [--qatra-teal:#387e7c] [--qatra-muted:#73818a] [--qatra-line:#e5ecec]">
+      <a href="#main" className="fixed -top-20 right-4 z-[60] rounded-lg bg-white p-3 focus:top-4">انتقل إلى المحتوى</a>
+      <style>{`html { scroll-behavior: smooth; scroll-padding-top: 6rem; } @keyframes qatra-ecg { 0% { stroke-dashoffset: 600; opacity: .35; } 78% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: .35; } } @keyframes qatra-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } } @keyframes qatra-bag { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-4px) rotate(1deg); } } @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }`}</style>
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-[#e5ecec] bg-white/95 backdrop-blur-xl">
+        <nav aria-label="القائمة الرئيسية" className="mx-auto flex h-[76px] w-[90%] max-w-[1160px] items-center justify-between gap-6 lg:h-[84px]">
+          <Link href="#main" className="flex items-center gap-2 text-[27px] font-extrabold text-[#a01d40]"><Image src="/img/logo.png" alt="قطرة" width={42} height={42} priority className="h-10 w-10 object-contain" /><span>قطرة<small className="block text-center font-sans text-[8px] tracking-[.3em] text-[#a57886]">QATRA</small></span></Link>
+          <div className="hidden items-center gap-7 text-[12px] font-semibold text-[#46565b] lg:flex"><a href="#about" className="hover:text-[#a01d40]">عن قطرة</a><a href="#services" className="hover:text-[#a01d40]">خدمات المنصة</a><a href="#journey" className="hover:text-[#a01d40]">كيف تعمل؟</a><a href="#faq" className="hover:text-[#a01d40]">أسئلة شائعة</a></div>
+          <div className="flex items-center gap-3 text-[11px]"><Link href={session.isAuthenticated ? session.dashboardHref : LANDING_ROUTES.login} className="hidden hover:text-[#a01d40] sm:inline">{session.isAuthenticated ? "لوحة التحكم" : "تسجيل الدخول"}</Link><Link href={joinHref} className="rounded-lg bg-[#a01d40] px-4 py-2.5 font-bold text-white transition hover:bg-[#71152e] sm:px-5">انضم إلى قطرة <ArrowUpLeft className="mr-2 inline h-3.5 w-3.5" /></Link><button className="grid h-10 w-10 place-items-center rounded-lg border border-[#e5ecec] lg:hidden" aria-label="القائمة"><Menu className="h-5 w-5" /></button></div>
+        </nav>
+      </header>
+
+      <main id="main" className="pt-[76px] lg:pt-[84px]">
+        <section id="about" className="scroll-mt-24 overflow-hidden bg-[linear-gradient(115deg,#f7eeee_0%,#fdf8f8_31%,#fff_67%)]">
+          <div className="mx-auto grid min-h-[560px] w-[90%] max-w-[1160px] items-center gap-8 py-12 lg:min-h-[650px] lg:grid-cols-2 lg:gap-[60px] lg:py-14">
+            <div className="order-1 text-center lg:text-right"><div className="flex items-center justify-center gap-2 text-[11px] font-bold text-[#387e7c] lg:justify-start"><span className="h-1.5 w-1.5 rounded-full bg-[#387e7c]" />لأن كل حياة تستحق فرصة</div><h1 className="my-5 text-[42px] font-extrabold leading-[1.5] tracking-tight sm:text-[54px] lg:text-[62px]">نصل العطاء<br /><em className="not-italic text-[#a01d40]">بنبض الحياة.</em></h1><p className="mx-auto max-w-[440px] text-[13px] leading-[2.2] text-[#73818a] lg:mx-0">منصة تجمع المتبرعين والمستشفيات وبنوك الدم، لتنظيم رحلة التبرع وتسهيل الوصول إلى المساعدة في الوقت المناسب.</p><div className="mt-6 flex flex-wrap justify-center gap-3 lg:justify-start"><Link href={LANDING_ROUTES.login} className="rounded-lg bg-[#a01d40] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#71152e]">أريد أن أكون متبرعًا <ArrowUpLeft className="mr-2 inline h-4 w-4" /></Link><a href="#journey" className="rounded-lg border border-[#d8e2e3] bg-white px-5 py-3 text-[12px] font-bold">كيف تعمل قطرة؟ <ArrowDown className="mr-2 inline h-4 w-4" /></a></div><p className="mt-5 flex items-center justify-center gap-2 text-[10px] text-[#7d8b91] lg:justify-start"><CheckCircle2 className="h-4 w-4 text-[#54867f]" />التنسيق عبر المنصة، وتقييم أهلية التبرع لدى الجهة الطبية.</p></div>
+            <div className="relative order-2 mx-auto h-[410px] w-full max-w-[560px] [perspective:1200px] sm:h-[480px] lg:h-[500px]">
+              <div className="absolute inset-4 rounded-[50%] opacity-60 [background-image:linear-gradient(#af778710_1px,transparent_1px),linear-gradient(90deg,#af778710_1px,transparent_1px)] [background-size:25px_25px] [mask-image:radial-gradient(ellipse,black_30%,transparent_70%)]" /><div className="absolute inset-8 rounded-[50%] border border-[#b46a7e20]" />
+              <div className="absolute inset-x-3 top-[12%] rounded-2xl border border-[#ecdfe3] bg-white p-4 shadow-[0_30px_65px_#7c24391a] transition-[box-shadow,transform] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_36px_76px_#7c243926] motion-safe:animate-[qatra-float_6s_ease-in-out_infinite] sm:inset-x-8 sm:p-6">
+                <div className="flex items-center justify-between border-b border-[#f1e7ea] pb-3"><div className="flex items-center gap-2 text-[11px] font-bold"><Droplet className="h-5 w-5 text-[#a01d40]" />رحلة التبرع بالدم</div><span className="rounded-full bg-[#edf7f2] px-3 py-1 text-[8px] text-[#438679]">عرض توضيحي</span></div>
+                <div className="flex items-center justify-center gap-6 py-5"><svg viewBox="0 0 100 140" aria-label="كيس دم توضيحي" className="h-[104px] w-[74px] motion-safe:animate-[qatra-bag_5s_ease-in-out_infinite] sm:h-[124px] sm:w-[90px]"><path d="M44 5h12v15H44z" fill="#c4cfd0"/><rect x="19" y="18" width="62" height="103" rx="14" fill="#fff6f7" stroke="#dcb0bd" strokeWidth="1.5"/><path d="M24 59q12-7 25 0t27 0v47a10 10 0 0 1-10 10H34a10 10 0 0 1-10-10Z" fill="#b43253"/><rect x="31" y="40" width="38" height="41" rx="5" fill="white"/><path d="M47 48h6v8h8v6h-8v8h-6v-8h-8v-6h8z" fill="#ac2145"/></svg><div><small className="text-[9px] text-[#9e7f8b]">من المتبرع… إلى المحتاج</small><h3 className="my-1 text-[22px] font-extrabold leading-relaxed">كل قطرة،<br />بداية أمل.</h3><div className="flex gap-1.5" dir="ltr">{["A+", "B+", "O−", "AB+"].map((type) => <span key={type} className="rounded bg-[#fbecf0] px-2 py-1 text-[10px] text-[#a42b4a]">{type}</span>)}</div></div></div>
+                <div className="h-9 overflow-hidden rounded-lg bg-[#f9fbfb]"><svg viewBox="0 0 400 45" className="h-full w-full" aria-hidden="true"><path d="M0 23H70l10-6 10 6h25l8-10 9 24 10-33 10 19h40l10-6 10 6h35l8-10 9 24 10-33 10 19h106" fill="none" stroke="#d6e6e2" strokeWidth="1.5"/><path d="M0 23H70l10-6 10 6h25l8-10 9 24 10-33 10 19h40l10-6 10 6h35l8-10 9 24 10-33 10 19h106" fill="none" stroke="#5f9891" strokeWidth="1.8" strokeDasharray="600" strokeDashoffset="600" className="motion-safe:animate-[qatra-ecg_4s_linear_infinite]" /></svg></div><div className="mt-3 flex justify-between text-[8px] text-[#9b9a9e]"><span>المتبرع · المستشفى · بنك الدم</span><span>تنسيق يصنع الفرق</span></div>
+              </div>
+              <div className="absolute right-0 top-[5%] flex items-center gap-3 rounded-xl border border-[#e7e8e8] bg-white/95 p-3 shadow-lg motion-safe:animate-[qatra-float_6s_ease-in-out_-1s_infinite] sm:right-1"><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#edf6f4] text-[#387e7c]"><Hospital className="h-5 w-5" /></span><span><b className="block text-[10px]">الجهة الطبية</b><small className="text-[8px] text-[#8b969b]">تفاصيل واضحة لخطوتك التالية</small></span></div>
+              <div className="absolute bottom-[3%] left-0 flex items-center gap-3 rounded-xl border border-[#e7e8e8] bg-white p-3 shadow-lg motion-safe:animate-[qatra-float_6s_ease-in-out_-2.5s_infinite]"><span className="grid h-9 w-9 place-items-center rounded-lg bg-[#faebef] text-[#a01d40]"><Heart className="h-5 w-5" /></span><span><b className="block text-[10px]">العطاء يبدأ منك</b><small className="text-[8px] text-[#8b969b]">كن جزءًا من رحلة التبرع</small></span></div>
+            </div>
+          </div>
+          <div className="mx-auto mb-8 grid w-[90%] max-w-[1160px] overflow-hidden rounded-xl border border-[#e5ecec] bg-white shadow-sm sm:grid-cols-3">{[{title:"المتبرعون",sub:"فرص للمشاركة في العطاء",icon:UsersRound},{title:"المستشفيات",sub:"تنظيم طلبات الدم والتنسيق",icon:Hospital},{title:"بنوك الدم",sub:"حلقة وصل في رحلة التبرع",icon:Droplet}].map(({title,sub,icon:Icon})=><a href="#community" key={title} className="flex items-center gap-4 border-b border-[#e5ecec] p-4 transition hover:bg-[#fcf5f7] last:border-0 sm:border-b-0 sm:border-l sm:p-5"><Icon className="h-6 w-6 text-[#a01d40]" /><span><b className="block text-[13px]">{title}</b><small className="text-[9px] text-[#8c979c]">{sub}</small></span><ArrowLeft className="mr-auto h-4 w-4 text-[#b5909b]" /></a>)}</div>
+        </section>
+
+        <section id="services" className="scroll-mt-24 py-16 lg:py-[85px]"><div className="mx-auto w-[90%] max-w-[1160px]"><SectionHeading kicker="منظومة متكاملة للتنسيق" title={<>رغبة في المساعدة.<br />وطريق أوضح للوصول.</>} description="تساعد قطرة على جمع تفاصيل رحلة التبرع، لتكون الخطوة التالية واضحة لكل طرف."/><div className="grid gap-5 md:grid-cols-3">{services.map(({number,title,description,icon:Icon},i)=><article key={number} className="group min-h-[245px] rounded-2xl border border-[#e5ecec] bg-white p-6 shadow-sm transition-all duration-500 ease-out hover:-translate-y-2 hover:border-[#d5e0e0] hover:shadow-[0_18px_40px_rgba(33,51,59,0.10)] focus-within:-translate-y-2 focus-within:border-[#d5e0e0] focus-within:shadow-[0_18px_40px_rgba(33,51,59,0.10)]"><div className="flex items-center justify-between"><span className={`grid h-11 w-11 place-items-center rounded-xl ${i===1?"bg-[#edf6f4] text-[#387e7c]":"bg-[#fff3f5] text-[#811225]"}`}><Icon className="h-5 w-5" /></span><span className="text-[10px] text-[#aebcbe]">{number}</span></div><h3 className="mt-5 text-[18px] font-extrabold">{title}</h3><p className="mt-2 text-[12px] leading-7 text-[#73818a]">{description}</p><div className="mt-4 h-[3px] w-9 bg-[#811225]/45 transition-[width,background-color] duration-500 ease-out group-hover:w-full group-hover:bg-[#811225] group-focus-within:w-full group-focus-within:bg-[#811225]" /></article>)}</div></div></section>
+
+        <section id="journey" className="scroll-mt-24 border-y border-[#edf2f0] bg-[#f6f9f8] py-16 lg:py-[85px]"><div className="mx-auto grid w-[90%] max-w-[1160px] items-center gap-10 lg:grid-cols-2 lg:gap-20"><div><Kicker>رحلتك مع قطرة</Kicker><h2 className="mt-3 text-[30px] font-extrabold leading-[1.6]">ثلاث خطوات.<br />وأثر يبدأ بك.</h2><p className="mt-3 max-w-md text-[13px] leading-7 text-[#73818a]">اختر خطوة لتستكشف الرحلة، من إنشاء حسابك إلى التنسيق مع الجهة الطبية.</p><div className="mt-6 space-y-2">{[["01","أنشئ ملفك","أضف معلوماتك الأساسية وفصيلة دمك وموقعك."],["02","اكتشف فرص المشاركة","راجع معلومات الحملة والجهة المنظمة والمكان والموعد."],["03","نسّق مع الجهة الطبية","اتبع تعليماتها، واترك تقييم أهليتك للتبرع للفريق الطبي."]].map(([n,t,d],i)=><div key={n} className={`flex gap-4 rounded-xl p-4 ${i===0?"border border-[#e1e9e5] bg-white shadow-sm":""}`}><span className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border text-[11px] ${i===0?"border-[#387e7c] bg-[#387e7c] text-white":"border-[#d8e4df] text-[#73818a]"}`}>{n}</span><div><b className="text-[13px]">{t}</b>{i===0&&<small className="mt-1 block text-[10px] text-[#7c8c8c]">{d}</small>}</div></div>)}</div></div><div className="rounded-2xl border border-[#e3ece8] bg-white p-6 shadow-[0_25px_65px_#234c3f0b] sm:p-8"><div className="flex justify-between border-b border-[#edf2ef] pb-4 text-[11px] text-[#7a9188]"><b className="text-[#387e7c]">قطرة / رحلة المتبرع</b><span>01 / 03</span></div><div className="mt-5 rounded-xl bg-[#f1f7f4] p-6 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#dbece3] text-xl text-[#4d8370]">♡</span><h3 className="mt-3 text-[17px] font-bold">البداية… بالتعرّف إليك.</h3><p className="mt-1 text-[10px] text-[#73818a]">بيانات أساسية تساعد على تنظيم تجربة المشاركة.</p></div><div className="mt-4 grid grid-cols-2 gap-3 text-[10px] text-[#8b9a93]"><span className="rounded-lg border border-[#e7eeea] p-3">الاسم والموقع</span><span className="rounded-lg border border-[#e7eeea] p-3">فصيلة الدم</span></div><p className="mt-4 text-[9px] text-[#9baca4]">معاينة توضيحية، ليست نموذج تسجيل.</p></div></div></section>
+
+        <section id="community" className="scroll-mt-24 py-16 lg:py-[85px]"><div className="mx-auto w-[90%] max-w-[1160px]"><SectionHeading kicker="لكل طرف دوره" title="نتكامل من أجل الحياة." description="تجربة تجمع من يريد أن يساعد، بمن ينسّق هذه المساعدة ويحتاج إليها."/><div className="grid gap-5 md:grid-cols-2"><RoleCard label="للأفراد والمتبرعين" number="01" title={<>عطاؤك يستحق<br />أن يصل.</>} description="أنشئ حسابك، تعرّف إلى فرص التبرع، وابدأ التواصل مع الجهة المنظمة." href={joinHref} link="ابدأ كمتبرع" /><RoleCard label="للمستشفيات وبنوك الدم" number="02" title={<>تنسيق أوضح.<br />ومعلومات أقرب.</>} description="مساحة لتنظيم طلبات الدم وحملات التبرع وتيسير التواصل مع المتبرعين." href={session.isAuthenticated?session.dashboardHref:LANDING_ROUTES.login} link="الدخول إلى المنصة" teal /></div></div></section>
+
+        <section id="faq" className="scroll-mt-24 py-8 pb-16 lg:pb-20"><div className="mx-auto grid w-[90%] max-w-[1160px] gap-8 lg:grid-cols-[1fr_1.3fr] lg:gap-16"><div><Kicker>قبل أن تبدأ</Kicker><h2 className="mt-3 text-[30px] font-extrabold leading-[1.6]">إجابات تطمئنك.<br />وخطوات واضحة.</h2></div><div>{[["ما هي قطرة؟","منصة لتنظيم وتنسيق التبرع بالدم، تربط المتبرعين بالمستشفيات وبنوك الدم."],["هل التسجيل يعني أنني مؤهل للتبرع؟","لا. التسجيل يتيح بدء التواصل، أما أهلية التبرع فيحددها الفريق الطبي بعد التقييم اللازم."],["كيف أبدأ باستخدام المنصة؟","اختر «انضم إلى قطرة» لبدء التسجيل، أو سجّل الدخول إذا كان لديك حساب."],["هل البطاقات المعروضة حالات حقيقية؟","البطاقات هنا توضيحية فقط، ولا تعرض بيانات مرضى أو طلبات دم حقيقية."]].map(([q,a])=><details key={q} className="group border-b border-[#e5ecec] py-5"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[13px] font-semibold marker:content-none">{q}<span className="text-lg text-[#a01d40] group-open:rotate-45">+</span></summary><p className="mt-3 text-[12px] leading-7 text-[#73818a]">{a}</p></details>)}</div></div></section>
+
+        <section className="mx-auto w-[90%] max-w-[1160px] pb-12 lg:pb-16"><div className="flex flex-col items-center justify-between gap-6 rounded-2xl bg-gradient-to-l from-[#a32043] to-[#75132f] px-6 py-8 text-center text-white sm:flex-row sm:px-10 sm:text-right"><div><h2 className="text-[25px] font-extrabold">كن قريبًا… حين يهمّ الأمر.</h2><p className="mt-2 text-[12px] text-[#edc6d0]">خطوتك اليوم قد تفتح بابًا جديدًا للأمل.</p></div><Link href={joinHref} className="rounded-lg bg-white px-6 py-3 text-[12px] font-bold text-[#a01d40]">انضم إلى قطرة <ArrowUpLeft className="mr-2 inline h-4 w-4" /></Link></div></section>
+      </main>
+      <footer className="border-t border-[#e5ecec] bg-[#fafcfc] py-8"><div className="mx-auto w-[90%] max-w-[1160px]"><div className="flex flex-wrap items-center justify-between gap-5"><Link href="#main" className="text-[26px] font-extrabold text-[#a01d40]">قطرة</Link><p className="text-[10px] leading-6 text-[#86959b]">نصل العطاء بالحياة.<br />منصة لتنسيق التبرع بالدم.</p><div className="flex w-full justify-center gap-5 text-[10px] text-[#73838b] sm:w-auto"><a href="#services">خدمات المنصة</a><a href="#journey">كيف تعمل</a><a href="#faq">الأسئلة الشائعة</a></div></div><div className="mt-6 flex justify-between border-t border-[#e5ecec] pt-4 text-[9px] text-[#93a1a7]"><span>© 2026 قطرة. لكل حياة فرصة.</span><span>نصل العطاء بالحياة</span></div></div></footer>
+    </div>
   );
 }
+
+function Kicker({ children }: { children: React.ReactNode }) { return <div className="flex items-center gap-2 text-[11px] font-bold text-[#387e7c]"><span className="h-1.5 w-1.5 rounded-full bg-[#387e7c]" />{children}</div>; }
+function SectionHeading({ kicker, title, description }: { kicker: string; title: React.ReactNode; description: string }) { return <div className="mb-7 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end md:gap-12"><div><Kicker>{kicker}</Kicker><h2 className="mt-3 text-[28px] font-extrabold leading-[1.6]">{title}</h2></div><p className="max-w-[365px] text-[12px] leading-7 text-[#73818a]">{description}</p></div>; }
+function RoleCard({ label, number, title, description, href, link, teal = false }: { label: string; number: string; title: React.ReactNode; description: string; href: string; link: string; teal?: boolean }) { return <article className={`rounded-2xl border p-7 sm:p-8 ${teal?"border-[#dfe9e5] bg-gradient-to-br from-white to-[#eef6f4]":"border-[#e9dee2] bg-gradient-to-br from-white to-[#fff4f6]"}`}><div className={`flex justify-between text-[10px] font-bold ${teal?"text-[#387e7c]":"text-[#a01d40]"}`}><span>{label}</span><span>{number}</span></div><h3 className="mt-5 text-[23px] font-extrabold leading-[1.6]">{title}</h3><p className="mt-2 max-w-sm text-[12px] leading-7 text-[#73818a]">{description}</p><Link href={href} className={`mt-4 inline-flex items-center gap-7 text-[12px] font-bold ${teal?"text-[#387e7c]":"text-[#a01d40]"}`}>{link}<ArrowUpLeft className="h-4 w-4" /></Link></article>; }
